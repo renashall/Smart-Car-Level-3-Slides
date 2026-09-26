@@ -27,7 +27,7 @@
   "Viewer loop() (chunk B4/5) — read a frame, show it, repeat. Press q to quit. waitKey(1) lets the window refresh and checks for a key. q to quit is an OpenCV convention used in every vision lesson from here on.",
   "Viewer destroy() + main block (chunk B5/5) — close the connection and the window cleanly. Same safe pattern as every lesson, just closing a network connection and a window instead of motors.",
   "We built both files — stress the symmetry. Server (Pi): imports, settings, setup(), accept_client(), loop(), destroy(), main. Viewer (computer): imports, setup(), read_frame(), loop(), destroy(), main. They agree on one rule: size first, picture second. Server packs the size, viewer unpacks it; server wb, viewer rb.",
-  "Run it — server first, then viewer. On the Pi: cd smartcar2026/Code/User then sudo python3 lesson_6_pi_camera_stream_server.py. On the Pi or a laptop: sudo python lesson_6_client_video_receiver.py 192.168.1.50 (use the Pi's real IP). Help students find the Pi's IP with hostname -I. Use 127.0.0.1 if the viewer runs on the Pi. Press q to quit.",
+  "Run it — server first, then viewer. On the Pi: cd Smart-Car-Level-3/Code/User then sudo python3 lesson_6_pi_camera_stream_server.py. On the Pi or a laptop: sudo python lesson_6_client_video_receiver.py 192.168.1.50 (use the Pi's real IP). Help students find the Pi's IP with hostname -I. Use 127.0.0.1 if the viewer runs on the Pi. Press q to quit.",
   "Try it yourself — smaller frames stream much more smoothly over Wi-Fi, a good thing to discover by experiment. Change FRAME_WIDTH / HEIGHT and FRAME_RATE on the server; rename WINDOW_NAME on the viewer. Challenge: run the viewer on a laptop while a classmate's runs on the Pi.",
   "Troubleshooting — 90% of issues are viewer started before server, or wrong IP. Check those first. Connection refused: start the server first and check the IP/port 8000. Black/frozen window: camera not ready, check the cable and picamera2. Laggy: lower resolution / frame rate or move closer to the router. cv2 not found: install opencv-python and numpy on the viewer.",
   "Recap — you streamed live video from the Pi to a computer using a socket and a simple frame protocol, and you met OpenCV, your tool for everything visual. Next, Lesson 7: detect a face in the video and turn the head to follow it. It reuses this exact read_frame() idea.",
@@ -846,7 +846,7 @@ video_file = <span class="kw">None</span>     <span class="co"># the same connec
               <div style="font-size:13px;font-weight:700;color:var(--navy-700);margin-bottom:6px">Step 1 — on the Pi, start the server</div>
               <div class="cwrap">
                 <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/User
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/User
 sudo python3 lesson_6_pi_camera_stream_server.py</pre>
               </div>
             </div>

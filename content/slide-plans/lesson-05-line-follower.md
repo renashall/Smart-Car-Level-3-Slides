@@ -303,7 +303,7 @@ if __name__ == "__main__":
 **On screen**
 - Put the car on a **line track** (black tape on a light floor), then on the **Pi**:
 ```sh
-cd smartcar2026/Code/User
+cd Smart-Car-Level-3/Code/User
 python3 lesson_5_line_follower.py
 ```
 - It should drive along the line. **Ctrl+C** to stop.

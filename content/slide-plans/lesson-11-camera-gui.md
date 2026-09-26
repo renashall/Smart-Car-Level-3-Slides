@@ -590,14 +590,14 @@ if __name__ == "__main__":
 - **Step 1 — on the Pi:** start the car's server.
 
 ```sh
-cd smartcar2026/Code/Server
+cd Smart-Car-Level-3/Code/Server
 sudo python3 main.py
 ```
 
 - **Step 2 — on your computer:** run the GUI.
 
 ```sh
-cd smartcar2026/Code/User
+cd Smart-Car-Level-3/Code/User
 python lesson_11_camera_gui.py
 ```
 

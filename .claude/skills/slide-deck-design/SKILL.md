@@ -1,12 +1,12 @@
 ---
 name: slide-deck-design
-description: Design or revise Smart Car course lesson slides in smartcar2026-slides. Use when creating rendered lesson slides from lesson .md plans, applying the repo Design System as the required visual framework, using content/slide-plans plus organization and course notes for slide content, and treating parent-repo code as read-only reference.
+description: Design or revise Smart Car course lesson slides in Smart-Car-Level-3-Slides. Use when creating rendered lesson slides from lesson .md plans, applying the repo Design System as the required visual framework, using content/slide-plans plus organization and course notes for slide content, and treating parent-repo code as read-only reference.
 ---
 
 # Lesson Slide Design
 
 Use this skill when creating, revising, or reviewing lesson slides in the
-`smartcar2026-slides` repository.
+`Smart-Car-Level-3-Slides` repository.
 
 ## Inputs
 
@@ -68,7 +68,7 @@ Use this skill when creating, revising, or reviewing lesson slides in the
 
 ## Boundaries
 
-- Write only inside `smartcar2026-slides/`.
+- Write only inside `Smart-Car-Level-3-Slides/`.
 - Do not edit parent-repo files, including `../Code/`, unless the user makes a
   separate explicit request.
 - Do not rename or alter `Design System/assets/fonts/Rubik/`.

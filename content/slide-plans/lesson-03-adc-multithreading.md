@@ -376,7 +376,7 @@ if __name__ == "__main__":
 **On screen**
 - On the **Pi's terminal**:
 ```sh
-cd smartcar2026/Code/User
+cd Smart-Car-Level-3/Code/User
 python3 lesson_3_adc_multithreading.py
 ```
 - Output **interleaves** the two threads — light every 1 s, battery every 3 s:

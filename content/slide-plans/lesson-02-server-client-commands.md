@@ -343,7 +343,7 @@ if __name__ == "__main__":
 - **Lift the car** (book/box under it) so wheels spin freely on the first run.
 - On the **Pi's terminal**:
 ```sh
-cd smartcar2026/Code/User
+cd Smart-Car-Level-3/Code/User
 sudo python3 lesson_2_server_client_commands.py
 ```
 - Watch the terminal — you'll see lines like:

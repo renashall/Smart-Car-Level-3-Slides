@@ -1,4 +1,4 @@
-# Slide-rendering toolchain for smartcar2026-slides
+# Slide-rendering toolchain for Smart-Car-Level-3-Slides
 # Approach (Claude-design-tool style): author HTML slides -> screenshot each
 # slide with a headless browser -> pack the images into PDF and/or PPTX, and/or
 # author PPTX directly. Also supports PDF <-> image conversion both directions.

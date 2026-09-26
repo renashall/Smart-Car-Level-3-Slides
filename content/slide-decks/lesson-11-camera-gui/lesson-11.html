@@ -30,7 +30,7 @@
   "refresh_video() (chunk 14/15) — the timer calls this. Take a quick copy of the latest frame UNDER the lock so the thread barely pauses, then return early if there's no picture yet. Swap OpenCV's Blue-Green-Red order to Qt's Red-Green-Blue — that's why faces look natural, not blue-tinted. Wrap the pixels in a QImage and draw it on the label.",
   "destroy() and main (chunk 15/15) — destroy() sets running = False to stop the thread, then closes the video file, the video socket, and the command socket. The main block builds the one QApplication, shows the window, and runs app.exec_() until the window closes. Note the wrapper is try/finally here, not try/except KeyboardInterrupt/finally, because PyQt supplies its own event loop — but the clean-shutdown habit (destroy() in finally) is exactly the same.",
   "We built the whole file — complete lesson_11_camera_gui.py: imports, settings, shared state, connect(), read_frame(), send_servo()/clamp(), track_face(), video_thread(), the CameraWindow class, its handlers, refresh_video(), destroy(), and the main block. One class for the window, plain functions for the work, one thread for the video. Tie it back to slide 5: a class only because PyQt needs one.",
-  "Run it — step 1, on the Pi, start the car's full server: cd smartcar2026/Code/Server, then sudo python3 main.py. Step 2, on your computer: cd smartcar2026/Code/User, then python lesson_11_camera_gui.py. In the window: type your Pi's IP, click Connect, and tick Track faces to follow a face. The IP box defaults to 192.168.1.50 — students must change it to their Pi's IP. Ports 5000 and 8000 must be reachable.",
+  "Run it — step 1, on the Pi, start the car's full server: cd Smart-Car-Level-3/Code/Server, then sudo python3 main.py. Step 2, on your computer: cd Smart-Car-Level-3/Code/User, then python lesson_11_camera_gui.py. In the window: type your Pi's IP, click Connect, and tick Track faces to follow a face. The IP box defaults to 192.168.1.50 — students must change it to their Pi's IP. Ports 5000 and 8000 must be reachable.",
   "Moving the camera head — each button nudges one servo by SERVO_STEP (4 degrees), sent as a CMD_SERVO command. Up/Down move tilt, channel '1' (+4 / -4). Left/Right move pan, channel '0' (-4 / +4). Home recentres pan and tilt to 90 degrees. The command format is CMD_SERVO#0#<pan> and CMD_SERVO#1#<tilt>. Connect the plus-pad layout back to chunk 10 — the grid coordinates make the shape.",
   "Try it yourself — change SERVO_STEP (bigger = faster, jerkier head; smaller = slower, smoother). Change DEAD_ZONE (bigger ignores more wobble; smaller follows more eagerly). Resize the frame with FRAME_WIDTH / FRAME_HEIGHT. Challenge: add a snapshot button that saves the current frame as a timestamped .png, or a small label showing the live pan and tilt angles. SERVO_STEP and DEAD_ZONE are the fun dials.",
   "Troubleshooting — 'Could not connect' means a wrong IP or ports 5000/8000 blocked; fix it and click Connect again. A black or frozen image means a camera-cable issue; restart the GUI and the Pi server. Face tracking does nothing if the box isn't ticked or the cascade can't load from Code/Client. Detection feels slow because it runs on your computer, not the Pi — improve lighting and face the camera. Most issues are the wrong IP or the server not started; check those two first.",
@@ -1046,7 +1046,7 @@ tilt_angle = <span class="nu">90.0</span>           <span class="co"># current u
               <div style="font-size:13px;font-weight:700;color:var(--navy-700);margin-bottom:6px">Step 1 — on the Pi, start the car's server</div>
               <div class="cwrap">
                 <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/Server
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/Server
 sudo python3 main.py</pre>
               </div>
             </div>
@@ -1054,7 +1054,7 @@ sudo python3 main.py</pre>
               <div style="font-size:13px;font-weight:700;color:var(--navy-700);margin-bottom:6px">Step 2 — on your computer, run the GUI</div>
               <div class="cwrap">
                 <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/User
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/User
 python lesson_11_camera_gui.py</pre>
               </div>
             </div>

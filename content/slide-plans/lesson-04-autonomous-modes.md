@@ -345,7 +345,7 @@ if __name__ == "__main__":
 **On screen**
 - Set `DEMO_MODE` to `"sonic"` or `"light"`, then on the **Pi**:
 ```sh
-cd smartcar2026/Code/User
+cd Smart-Car-Level-3/Code/User
 python3 lesson_4_autonomous_modes.py
 ```
 - **Give it floor space.** For light mode, use a phone flashlight. **Ctrl+C** to stop.

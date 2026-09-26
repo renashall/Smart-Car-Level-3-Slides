@@ -1,7 +1,7 @@
-# Claude Guide - smartcar2026-slides
+# Claude Guide - Smart-Car-Level-3-Slides
 
-This nested repository is for designing slide decks for the Smart Car course.
-It lives inside the parent `smartcar2026` repository.
+This repository is for designing slide decks for the Smart Car course.
+It is a companion to the `Smart-Car-Level-3` code repository.
 
 ## Primary Role
 
@@ -10,22 +10,19 @@ It lives inside the parent `smartcar2026` repository.
 - Use `Design System/assets/` for reusable visual material: icons, product
   images, board images, screenshots, course visuals, and fonts.
 - Keep slide work self-contained in this repository. Do not edit files outside
-  `smartcar2026-slides/`.
+  `Smart-Car-Level-3-Slides/`.
 
 ## Repository Boundary
 
-- This repo is usually nested inside the larger `smartcar2026` repo, or kept
-  next to it as a companion slide-design repo.
-- If this repo is nested in `smartcar2026`, use `..` or `../Code/` for scripted
-  reads. If it is checked out next to `smartcar2026`, look for `../smartcar2026/`
-  and its `Code/` folder instead.
-- You may read parent-repo files for context, especially `../Code/`, which
-  contains the course and smart car code referenced by the slide material.
+- This repo may be nested inside `Smart-Car-Level-3` or checked out next to it.
+- If nested, use `..` or `../Code/` for scripted reads. If checked out next to
+  `Smart-Car-Level-3`, use `../Smart-Car-Level-3/` and its `Code/` folder.
+- You may read the companion repo's files for context, especially its `Code/`
+  folder, which contains the course and smart car code referenced by the slides.
 - Never write, rename, delete, format, or otherwise modify files outside this
-  nested repo unless the user explicitly asks for that separate parent-repo
-  work.
+  repo unless the user explicitly asks for that separate code-repo work.
 - If you need code examples for slides, read them from the nearby
-  `smartcar2026` repo's `Code/` folder and adapt concise excerpts into slide
+  `Smart-Car-Level-3` repo's `Code/` folder and adapt concise excerpts into slide
   content.
 
 ## Layout
@@ -102,7 +99,7 @@ cleaned up.
 - Keep code on slides short and readable. Prefer focused excerpts over full
   files.
 - When a deck references repository code, verify the code path and filename
-  against the nearby `smartcar2026` repo's `Code/` folder before finalizing.
+  against the nearby `Smart-Car-Level-3` repo's `Code/` folder before finalizing.
 
 ## Safety
 

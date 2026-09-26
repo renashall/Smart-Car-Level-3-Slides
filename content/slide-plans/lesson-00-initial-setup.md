@@ -61,8 +61,8 @@
 **On screen**
 
 - Keep these two PDFs handy (in the repo's `Resources/` folder):
-  - 📘 **[Tutorial.pdf](https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf)** — building the car and general kit guidance.
-  - 🔋 **[About_Battery.pdf](https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf)** — choosing and handling batteries safely.
+  - 📘 **[Tutorial.pdf](https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf)** — building the car and general kit guidance.
+  - 🔋 **[About_Battery.pdf](https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf)** — choosing and handling batteries safely.
 - Note: the code has been updated since the Tutorial was written, so trust the **lesson decks** for code.
 
 **Visual:** Design System/assets/icons/technology.png
@@ -152,7 +152,7 @@
 
 **On screen**
 
-- The full step-by-step **assembly** is in **[`Resources/Tutorial.pdf`](https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf)**.
+- The full step-by-step **assembly** is in **[`Resources/Tutorial.pdf`](https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf)**.
 - Build the frame, mount motors + wheels, attach the head/camera, and seat the Pi on the board.
 - Take your time and keep screws organized.
 
@@ -184,7 +184,7 @@
 - The car uses **18650** rechargeable lithium cells.
 - **Buy quality cells** — cheap/counterfeit ones can be unsafe and perform poorly.
   - A reputable source: **18650batterystore.com**
-- Full guidance is in **[`Resources/About_Battery.pdf`](https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf)** — read it before charging.
+- Full guidance is in **[`Resources/About_Battery.pdf`](https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf)** — read it before charging.
 
 **Visual:** Design System/assets/materials/18650-batteries.png
 
@@ -197,7 +197,7 @@
 **On screen**
 
 - Treat lithium batteries with respect:
-  - Use the **correct type** for the car (see [About_Battery.pdf](https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf)).
+  - Use the **correct type** for the car (see [About_Battery.pdf](https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf)).
   - Insert with the right **polarity** (+ / −).
   - **Never short** the terminals; keep cells away from coins/keys/metal.
   - **Don't use damaged** cells (dented, leaking, or wrapper torn).
@@ -457,16 +457,16 @@ sudo raspi-config
 - Get it with **git** — the same command everywhere:
 
 ```sh
-git clone https://github.com/renashall/smartcar2026.git
-cd smartcar2026
+git clone https://github.com/renashall/Smart-Car-Level-3.git
+cd Smart-Car-Level-3
 ```
 
-- This creates a **`smartcar2026`** folder with all the lesson code.
+- This creates a **`Smart-Car-Level-3`** folder with all the lesson code.
 - No git? Download the **ZIP** from the repo page and unzip it.
 
 **Visual:** Design System/assets/icons/terminal.png
 
-**Coach note:** The clone link is also posted on the class page / Discord. Students clone on **both** the Pi and their computer. Confirm each ends up with a `smartcar2026` folder.
+**Coach note:** The clone link is also posted on the class page / Discord. Students clone on **both** the Pi and their computer. Confirm each ends up with a `Smart-Car-Level-3` folder.
 
 ---
 
@@ -496,7 +496,7 @@ cd smartcar2026
 - From the `Code` folder, make the scripts runnable and start part 1:
 
 ```sh
-cd smartcar2026/Code
+cd Smart-Car-Level-3/Code
 chmod +x setupPart1.sh setupPart2.sh
 ./setupPart1.sh
 ```
@@ -517,7 +517,7 @@ chmod +x setupPart1.sh setupPart2.sh
 - After the reboot, return to the `Code` folder and run part 2:
 
 ```sh
-cd smartcar2026/Code
+cd Smart-Car-Level-3/Code
 ./setupPart2.sh
 ```
 
@@ -554,7 +554,7 @@ cd smartcar2026/Code
 - Put all your course work in:
 
 ```text
-smartcar2026/Code/User
+Smart-Car-Level-3/Code/User
 ```
 
 - Lesson files start with `import car_setup` so the car's modules import cleanly.
@@ -572,7 +572,7 @@ smartcar2026/Code/User
 
 - Raspberry Pi OS comes with **Thonny**, a beginner-friendly Python editor — already installed, nothing to download.
 - Open it on the Pi desktop (over **VNC**): **Menu → Programming → Thonny**.
-- Use it to open, write, and **save** your lesson files in `smartcar2026/Code/User`.
+- Use it to open, write, and **save** your lesson files in `Smart-Car-Level-3/Code/User`.
 - It's the easy way to read and edit code right on the car.
 - You **run** lessons from the terminal, not Thonny's Run button — we cover that in **Lesson 1**.
 
@@ -627,7 +627,7 @@ python3 --version
 - Make one named **`.venv`** in the **repo root** (do this once):
 
 ```sh
-cd smartcar2026
+cd Smart-Car-Level-3
 # Windows
 py -m venv .venv
 # macOS / Linux
@@ -700,9 +700,9 @@ python3 Code/setup.py
   1. The Pi **boots** and joins Wi-Fi.
   2. You can **SSH** in: `ssh pi@mypi.local`.
   3. **VNC Viewer** shows the Pi desktop.
-  4. The `smartcar2026` folder exists on the Pi and **both setup scripts ran**.
+  4. The `Smart-Car-Level-3` folder exists on the Pi and **both setup scripts ran**.
   5. On **your computer**: the `.venv` **activates** (you see `(.venv)`) and `python -c "import cv2"` runs with no error.
-  6. You can open a terminal and `cd smartcar2026/Code/User`.
+  6. You can open a terminal and `cd Smart-Car-Level-3/Code/User`.
 - ✅ All six? You're ready for Lesson 1!
 
 **Visual:** Design System/assets/icons/success.png
@@ -785,13 +785,13 @@ python3 Code/setup.py
 
 **Links (verify before class)**
 
-- Course repo (clone) — https://github.com/renashall/smartcar2026.git
+- Course repo (clone) — https://github.com/renashall/Smart-Car-Level-3.git
 - Raspberry Pi Imager — https://www.raspberrypi.com/software/
 - VNC Viewer — https://www.realvnc.com/en/connect/download/viewer/
 - Raspberry Pi Connect — https://www.raspberrypi.com/software/connect/
 - Batteries — https://www.18650batterystore.com/
-- Tutorial.pdf — https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf
-- About_Battery.pdf — https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf
+- Tutorial.pdf — https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf
+- About_Battery.pdf — https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf
 
 **Assets to source (flagged in deck)**
 

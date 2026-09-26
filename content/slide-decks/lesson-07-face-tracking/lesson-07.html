@@ -26,7 +26,7 @@
   "loop() (chunk 11/12) — read a frame, find the biggest face, draw a green box, move the head, show it. Press q to quit. This reads top-to-bottom like English: read, detect, draw, track, show. Highlight that clarity.",
   "destroy() + main block (chunk 12/12) — close BOTH connections and the window, then the usual safe wrapper. Two connections now, so two closes. Same finally-always-cleans-up habit from every lesson.",
   "We built the whole file — complete lesson_7_face_tracking.py: imports, settings, placeholders, setup(), read_frame(), detect_faces()/biggest_face(), send_servo(), track_face()/clamp(), loop(), destroy(), main. Every function does one job — ready for Lesson 8 to import. Re-emphasize single-purpose functions; it pays off next lesson.",
-  "Run it — Step 1, on the Pi, start the car's full server: cd smartcar2026/Code/Server then sudo python3 main.py. Step 2, on the Pi or your laptop, cd smartcar2026/Code/User then run the tracker with the Pi's IP: python lesson_7_face_tracking.py 192.168.1.50. A window shows the camera; the head follows your face. Press q to quit. Face detection is CPU-heavy — a laptop runs it much smoother than the Pi. Use 127.0.0.1 on the Pi.",
+  "Run it — Step 1, on the Pi, start the car's full server: cd Smart-Car-Level-3/Code/Server then sudo python3 main.py. Step 2, on the Pi or your laptop, cd Smart-Car-Level-3/Code/User then run the tracker with the Pi's IP: python lesson_7_face_tracking.py 192.168.1.50. A window shows the camera; the head follows your face. Press q to quit. Face detection is CPU-heavy — a laptop runs it much smoother than the Pi. Use 127.0.0.1 on the Pi.",
   "Try it yourself — change SERVO_STEP (bigger = faster but jumpier), change DEAD_ZONE (smaller = more sensitive and twitchier), change the box color in loop(). Challenge: widen TILT_MIN / TILT_MAX and see how far up/down it can follow. Let them feel the trade-off: responsiveness vs jitter. There's no single right value.",
   "Troubleshooting — Could not load the face file means the cascade path is wrong; confirm it's in Code/Client/. No green box means more light on the face and face the camera straight on. Head jitters / overshoots means raise DEAD_ZONE or lower SERVO_STEP. Connection refused means start sudo python3 main.py on the Pi first and check the IP. Lighting is the biggest factor in detection quality — aim a lamp at the student's face if needed.",
   "Recap & what's next — you used OpenCV to detect a face and steered the head to follow it; you combined video in (8000) with commands out (5000). Next, Lesson 8: handle multiple faces and lock onto one — by reusing this file. Tease L8: we won't rewrite any of this, we'll import it.",
@@ -259,7 +259,7 @@
             <p style="font-size:16px;color:#fff;margin:0 0 12px;line-height:1.5">Lessons 7 &amp; 8 talk to the <b>full</b> <code class="inl" style="background:rgba(255,255,255,.14);color:#fff">main.py</code> server — both ports, not the Lesson 6 server.</p>
             <div class="cwrap" style="box-shadow:none">
               <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/Server
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/Server
 sudo python3 main.py</pre>
             </div>
           </div>
@@ -825,7 +825,7 @@ tilt_angle = <span class="nu">90.0</span>      <span class="co"># current up/dow
               <div style="font-size:13px;font-weight:700;color:var(--navy-700);margin-bottom:6px">Step 1 — on the Pi, start the car's server</div>
               <div class="cwrap">
                 <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/Server
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/Server
 sudo python3 main.py</pre>
               </div>
             </div>
@@ -833,7 +833,7 @@ sudo python3 main.py</pre>
               <div style="font-size:13px;font-weight:700;color:var(--navy-700);margin-bottom:6px">Step 2 — on the Pi or your laptop, run the tracker</div>
               <div class="cwrap">
                 <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">terminal</span></div>
-<pre class="cpre sm">cd smartcar2026/Code/User
+<pre class="cpre sm">cd Smart-Car-Level-3/Code/User
 python lesson_7_face_tracking.py 192.168.1.50</pre>
               </div>
             </div>

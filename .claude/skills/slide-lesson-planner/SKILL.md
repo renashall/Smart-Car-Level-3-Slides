@@ -9,7 +9,7 @@ Use this skill to turn one course lesson into a **content/layout outline deck** 
 a single Markdown file that lays out every slide's text, visuals, code, and
 coach notes. These are planning docs, not rendered slides. This skill builds on
 `slide-deck-design`; follow that skill's repo boundaries (write only inside
-`smartcar2026-slides/`, read `../Code/` for reference only, never alter
+`Smart-Car-Level-3-Slides/`, read `../Code/` for reference only, never alter
 `Design System/assets/fonts/Rubik/`).
 
 ## Output location & naming
@@ -157,4 +157,4 @@ Non-code lessons adapt the arc:
 6. Title-case every slide title.
 7. Verify: required slides present; code excerpts match the source; every
    `Design System/assets/...` path exists; each `[ASSET NEEDED]` is genuinely missing; no files
-   outside `smartcar2026-slides/` were touched.
+   outside `Smart-Car-Level-3-Slides/` were touched.

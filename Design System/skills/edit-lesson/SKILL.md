@@ -34,7 +34,7 @@ deck only if it already exists.
    that deck so it reflects the revised plan.
 6. If no matching deck exists, stop after the lesson plan edit and mention that
    no rendered deck was present.
-7. Keep all writes inside `smartcar2026-slides/`.
+7. Keep all writes inside `Smart-Car-Level-3-Slides/`.
 
 ## Deck Sync Rules
 
