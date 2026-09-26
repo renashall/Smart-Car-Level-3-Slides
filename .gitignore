@@ -29,5 +29,9 @@ content/old-slide-decks
 content/**/*.pdf
 content/**/*.pptx
 
+# Local root-level copies of exported decks
+/PDF/
+/PPTX/
+
 # Aggregated export bundle (rendered decks + plans + links)
 Export/
