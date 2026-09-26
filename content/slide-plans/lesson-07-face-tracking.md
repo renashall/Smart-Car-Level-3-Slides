@@ -386,7 +386,7 @@ if __name__ == "__main__":
 **On screen**
 - **Step 1 — on the Pi**, start the car's server:
 ```sh
-cd Smart-Car-Level-3/Code
+cd smartcar2026/Code
 sudo python3 main.py
 ```
 - **Step 2 — on the Pi or your laptop**, run the tracker with the Pi's IP:

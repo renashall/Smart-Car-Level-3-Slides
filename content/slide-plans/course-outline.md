@@ -39,5 +39,5 @@ with a final project workshop and presentation.
 - General course notes live in `content/specific-notes.md`.
 - Coaching and administrative notes live in `content/organization-notes.md`.
 - Useful course links (downloads, repo, build video) live in
-  `content/links.txt`.
+  `content/Links.txt`.
 

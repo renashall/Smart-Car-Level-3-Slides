@@ -1,7 +1,7 @@
 # Claude Guide - Smart-Car-Level-3-Slides
 
 This repository is for designing slide decks for the Smart Car course.
-It is a companion to the `Smart-Car-Level-3` code repository.
+It is a companion to the `smartcar2026` code repository.
 
 ## Primary Role
 
@@ -14,15 +14,15 @@ It is a companion to the `Smart-Car-Level-3` code repository.
 
 ## Repository Boundary
 
-- This repo may be nested inside `Smart-Car-Level-3` or checked out next to it.
+- This repo may be nested inside `smartcar2026` or checked out next to it.
 - If nested, use `..` or `../Code/` for scripted reads. If checked out next to
-  `Smart-Car-Level-3`, use `../Smart-Car-Level-3/` and its `Code/` folder.
+  `smartcar2026`, use `../smartcar2026/` and its `Code/` folder.
 - You may read the companion repo's files for context, especially its `Code/`
   folder, which contains the course and smart car code referenced by the slides.
 - Never write, rename, delete, format, or otherwise modify files outside this
   repo unless the user explicitly asks for that separate code-repo work.
 - If you need code examples for slides, read them from the nearby
-  `Smart-Car-Level-3` repo's `Code/` folder and adapt concise excerpts into slide
+  `smartcar2026` repo's `Code/` folder and adapt concise excerpts into slide
   content.
 
 ## Layout
@@ -99,7 +99,7 @@ cleaned up.
 - Keep code on slides short and readable. Prefer focused excerpts over full
   files.
 - When a deck references repository code, verify the code path and filename
-  against the nearby `Smart-Car-Level-3` repo's `Code/` folder before finalizing.
+  against the nearby `smartcar2026` repo's `Code/` folder before finalizing.
 
 ## Safety
 

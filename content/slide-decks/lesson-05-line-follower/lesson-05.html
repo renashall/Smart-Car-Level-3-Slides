@@ -24,7 +24,7 @@
   "destroy() (chunk 8/9) — stop the wheels, then release the pins with GPIO.cleanup(). cleanup() is new — the polite 'I'm done with the pins' step so other programs can use them next time.",
   "Main block (chunk 9/9) — the same safe wrapper: setup, loop, and always destroy(). Students should recognize this instantly by now.",
   "Whole file — complete lesson_5_line_follower.py: imports -> pins -> speeds -> setup() -> read_sensors() -> choose_move() -> loop() -> destroy() -> main. Highlight how small choose_move is thanks to the binary trick.",
-  "Run it — put the car on a line track (black tape on a light floor), then on the Pi: cd Smart-Car-Level-3/Code/User then sudo python3 lesson_5_line_follower.py. A simple oval/loop of tape works best. Ctrl+C to stop.",
+  "Run it — put the car on a line track (black tape on a light floor), then on the Pi: cd smartcar2026/Code/User then sudo python3 lesson_5_line_follower.py. A simple oval/loop of tape works best. Ctrl+C to stop.",
   "Try it yourself — the print(sensors) tip is the best way for students to SEE the binary numbers change as they move the car by hand. Speed up FORWARD for a faster lap; strengthen HARD_LEFT/HARD_RIGHT for sharp corners.",
   "Troubleshooting — sensor height above the floor matters a lot; a few millimeters can fix erratic reads. Steers the wrong way -> Left/Right may be swapped; check pins 14 / 15 / 23. 'Pin already in use' is harmless.",
   "Recap — celebrate the halfway milestone: five lessons down. You read the Pi's pins with RPi.GPIO and used a binary trick to turn three sensors into one decision. Next: Lesson 6 gives the car a camera and live video over Wi-Fi.",
@@ -679,7 +679,7 @@ STOP = (<span class="nu">0</span>, <span class="nu">0</span>, <span class="nu">0
           <div style="display:flex;flex-direction:column;gap:14px">
             <div class="cwrap">
               <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
-<pre class="cpre sm">cd Smart-Car-Level-3/Code/User
+<pre class="cpre sm">cd smartcar2026/Code/User
 sudo python3 lesson_5_line_follower.py</pre>
             </div>
             <div style="display:flex;gap:13px;align-items:center;background:var(--amber-100);border:1px solid var(--amber-300);border-radius:var(--radius-lg);padding:14px 18px">

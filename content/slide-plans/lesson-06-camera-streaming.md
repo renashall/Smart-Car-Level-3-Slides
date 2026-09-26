@@ -432,7 +432,7 @@ if __name__ == "__main__":
 **On screen**
 - **Step 1 — on the Pi**, start the server:
 ```sh
-cd Smart-Car-Level-3/Code/User
+cd smartcar2026/Code/User
 python3 lesson_6_pi_camera_stream_server.py
 ```
 - **Step 2 — on the Pi or your laptop**, start the viewer with the Pi's IP:

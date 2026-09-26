@@ -345,7 +345,7 @@ if __name__ == "__main__":
 **On screen**
 - Write this lesson in **Thonny** — the Pi's built-in Python editor (already installed on Raspberry Pi OS).
 - Open it on the Pi desktop (over **VNC**): **Menu → Programming → Thonny**.
-- **Save the file in** `Smart-Car-Level-3/Code/User` — the same folder as `car_setup.py`, so the imports resolve.
+- **Save the file in** `smartcar2026/Code/User` — the same folder as `car_setup.py`, so the imports resolve.
 - Keep the filename `lesson_1_components.py`.
 - Our workflow all course long: **edit & save in Thonny → run from the terminal**.
 - We don't use Thonny's green **Run** button for these lessons — they need `sudo` (root), which the terminal handles cleanly.
@@ -361,7 +361,7 @@ if __name__ == "__main__":
 **On screen**
 - You saved the file in `Code/User` with Thonny — now switch to the **Pi's terminal** to run it:
 ```sh
-cd Smart-Car-Level-3/Code/User
+cd smartcar2026/Code/User
 sudo python3 lesson_1_components.py
 ```
 - Why `sudo`? The LED strip library needs root to reach the hardware.
@@ -420,7 +420,7 @@ sudo python3 lesson_1_components.py
 
 **Before class**
 - Charge cars; low battery is the cause of most servo/LED weirdness.
-- Confirm every student can open a terminal on the Pi and `cd Smart-Car-Level-3/Code/User`.
+- Confirm every student can open a terminal on the Pi and `cd smartcar2026/Code/User`.
 - Pre-run the file yourself once to confirm the kit works.
 
 **Most common failures (in order)**

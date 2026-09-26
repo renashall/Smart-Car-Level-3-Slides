@@ -15,10 +15,10 @@ a Freenove 4WD smart car.
 Everything in this system was derived from materials provided by the user. Store
 these references even though the reader may not have access:
 
-- **Course codebase** — `Smart-Car-Level-3/` (mounted, read-only). A fork of the
+- **Course codebase** — `smartcar2026/` (mounted, read-only). A fork of the
   *Freenove 4WD Smart Car Kit for Raspberry Pi* with AI Code Academy course code
   under `Code/User/` (`lesson_1` … `lesson_11`, `USER.md`).
-  - Brand color signal: `Smart-Car-Level-3/Internal_Debug/restyle.py` (dark Qt theme,
+  - Brand color signal: `smartcar2026/Internal_Debug/restyle.py` (dark Qt theme,
     teal `#00c2a3`).
   - Control GUI source: `Code/User/lesson_11_camera_gui.py`.
 - **Brand & course assets** — `assets/` (mounted, read-only): logos, course PNG

@@ -4,7 +4,7 @@ Slide decks for **Machine Learning with Raspberry Pi & Smart Car (Level 3)**, an
 AI Code Academy course. This repository holds the lesson plans, the rendered
 decks, and the design system used to build them.
 
-It is a companion to the [`Smart-Car-Level-3`](https://github.com/renashall/Smart-Car-Level-3)
+It is a companion to the [`smartcar2026`](https://github.com/renashall/smartcar2026)
 repository, which contains the smart-car and course code referenced throughout
 the slides. The slides repository is
 [`Smart-Car-Level-3-Slides`](https://github.com/renashall/Smart-Car-Level-3-Slides).
@@ -83,7 +83,7 @@ Save every deliverable together in
 
 ## Conventions
 
-- Keep all slide work inside this repository; the companion `Smart-Car-Level-3`
+- Keep all slide work inside this repository; the companion `smartcar2026`
   repo is read-only reference (its `Code/` folder is the source for code excerpts).
 - Plans live in `content/slide-plans/`; rendered decks live in
   `content/slide-decks/`.

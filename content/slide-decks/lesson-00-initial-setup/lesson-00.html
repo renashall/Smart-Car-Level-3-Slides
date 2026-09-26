@@ -12,17 +12,17 @@
   "Title — ~2 min. Welcome everyone to the course. This session is about getting set up: patience pays off, because every later lesson depends on it. Site: https://aicodeacademy.com",
   "Introduction — reassure students that setup is fiddly for everyone. We go step by step and help each other. It's the longest, most technical session, but you only do it once.",
   "Our goals — set the finish line clearly: a working, reachable Pi with the course code installed, plus a ready-to-go computer. Read the five goals aloud.",
-  "Two references — point students to Resources/Tutorial.pdf (https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf) and Resources/About_Battery.pdf (https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf). Flag the Tutorial-vs-current-code caveat now to avoid confusion later: trust the lesson decks for code.",
+  "Two references — point students to Resources/Tutorial.pdf (https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf) and Resources/About_Battery.pdf (https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf). Flag the Tutorial-vs-current-code caveat now to avoid confusion later: trust the lesson decks for code.",
   "What's in the box — have students open their kits and lay parts out in these five groups. Budget about 5 min to inventory before moving on.",
   "Car board & frame — acrylic may have a protective paper film to peel. Mention it so students don't think it's scratched.",
   "Transmission parts — these are the parts from Lessons 1-2 (servo turns the head, motors drive the wheels). Preview that connection.",
   "Electronic parts (sensors) — each sensor maps to a lesson: ultrasonic distance (4), camera video (6-8), line tracker (5). It makes the kit feel purposeful.",
   "Electronic parts (connections) — the connection board links the sensors to the Pi; the jumper wires and 5-pin cable wire everything together.",
   "Tools — tell students to keep the black tape: they'll build a line track with it in Lesson 5.",
-  "Building the car — recommend students watch the build video and follow along: Smart car build video on Google Drive (https://drive.google.com/file/d/1fl8dAGgtttkPZFmboovwltMmlfYszNP7/view?usp=share_link). The full step-by-step assembly photos are in Resources/Tutorial.pdf (https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf). The video card on this slide is clickable. Decide whether assembly happens in class or as homework; budget time accordingly. Keep screws organized.",
+  "Building the car — recommend students watch the build video and follow along: Smart car build video on Google Drive (https://drive.google.com/file/d/1fl8dAGgtttkPZFmboovwltMmlfYszNP7/view?usp=share_link). The full step-by-step assembly photos are in Resources/Tutorial.pdf (https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf). The video card on this slide is clickable. Decide whether assembly happens in class or as homework; budget time accordingly. Keep screws organized.",
   "Power overview — during setup we usually power the Pi from the wall adapter; the 18650 batteries are for driving later.",
-  "The 18650 batteries — emphasize buying correct, genuine cells; cheap/counterfeit ones can be unsafe. A reputable source is 18650batterystore.com (https://www.18650batterystore.com/). Full specs in About_Battery.pdf (https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf).",
-  "Battery safety — do this slide seriously and slowly. Stop and answer questions. When in doubt, set a bad cell aside and don't use it. Details in About_Battery.pdf (https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf).",
+  "The 18650 batteries — emphasize buying correct, genuine cells; cheap/counterfeit ones can be unsafe. A reputable source is 18650batterystore.com (https://www.18650batterystore.com/). Full specs in About_Battery.pdf (https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf).",
+  "Battery safety — do this slide seriously and slowly. Stop and answer questions. When in doubt, set a bad cell aside and don't use it. Details in About_Battery.pdf (https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf).",
   "Charging — start charging early in the session so cells are ready for later lessons. Most 'car won't drive' issues are weak batteries. Unplug when done; don't leave unattended.",
   "Powering the Pi — Pi 4/5 use USB-C; Pi 3 uses micro-USB. Wrong or weak adapters are a top cause of boot and stability problems. Under-power shows a lightning-bolt warning on screen.",
   "Which Raspberry Pi, part 1 (Pi 4 / 5) — the Pi 4 is the recommended board: fast enough for the camera and vision lessons, and it uses USB-C power (shared with the Pi 5). The Pi 5 works for everything EXCEPT the camera/vision lessons (6-8): its camera connector is different, so the kit's ribbon camera won't plug in unless students source a Pi 5 adapter cable. Lessons 7-8 (face detection) are CPU-heavy and run best on a Pi 4 or a laptop.",
@@ -39,12 +39,12 @@
   "Install VNC Viewer — on your computer, download VNC Viewer from https://www.realvnc.com/en/connect/download/viewer/. Free; pick your OS. Newer versions may ask you to create an account.",
   "Connect with VNC — enter the Pi's hostname or IP, log in with the Pi username and password. First connection may warn about identity/encryption: accept to continue. Tiny/black screen -> see troubleshooting (resolution).",
   "Optional: Raspberry Pi Connect — reach your Pi from anywhere, not just home Wi-Fi: https://www.raspberrypi.com/software/connect/. Needs an account and a one-time sign-in on the Pi. Good fallback when a school/home network blocks local discovery.",
-  "Download the course code — needed in TWO places: on the Pi (to drive the car) and on your computer (camera/vision lessons 6-8 & 11). The clone link is https://github.com/renashall/Smart-Car-Level-3.git (HTTPS) or git@github.com:renashall/Smart-Car-Level-3.git (SSH), also posted on the class page / Discord. No git? Download the ZIP from the repo page.",
+  "Download the course code — needed in TWO places: on the Pi (to drive the car) and on your computer (camera/vision lessons 6-8 & 11). The clone link is https://github.com/renashall/smartcar2026.git (HTTPS) or git@github.com:renashall/smartcar2026.git (SSH), also posted on the class page / Discord. No git? Download the ZIP from the repo page.",
   "Cloning everywhere — the git clone command is identical on every system; only the terminal differs. Windows: PowerShell. macOS: Terminal. Pi: Terminal or your SSH session. On the Pi git is normally already there.",
   "Setup Part 1 (Pi) — it auto-detects the Pi model/OS, enables interfaces, makes python3 the default python, and installs I2C support. These scripts run on the Pi ONLY. Let it reboot before Part 2. If SSH drops on reboot, reconnect after a minute.",
   "Setup Part 2 (Pi) — after the reboot, run part 2. It sets up the camera boot config, installs the WS281x LED driver, and the course Python packages. Two scripts, two reboots, by design. After this the Pi has all the hardware libraries the lessons need.",
   "What the scripts did — reassure: the scripts replace a lot of manual fiddling. That's why on the Pi you do NOT need a virtual environment. If one failed, re-run it and read the last error line.",
-  "Where your code lives — put all your course work in Smart-Car-Level-3/Code/User. Lesson files start with 'import car_setup' so the car's modules import cleanly. We explain car_setup.py properly in Lesson 1.",
+  "Where your code lives — put all your course work in smartcar2026/Code/User. Lesson files start with 'import car_setup' so the car's modules import cleanly. We explain car_setup.py properly in Lesson 1.",
   "Editing code on the Pi: Thonny — Thonny ships with Raspberry Pi OS and runs on the Pi desktop (reach it over VNC); no install needed. Students open, edit and SAVE lesson files into Code/User here, but RUN lessons from the terminal (the LED lessons need sudo) — we explain that split in Lesson 1.",
   "Is Python installed (computer) — the Pi already has Python. These next steps are for YOUR computer, for the vision lessons. On Windows, 'py' is the most reliable launcher; if 'python' opens the Microsoft Store, use 'py'. The course needs Python 3.9+.",
   "Install Python if needed — the #1 Windows mistake is forgetting 'Add python.exe to PATH' (then python/py isn't found). Re-running the installer and ticking it fixes it. macOS: python.org or 'brew install python'. Close and reopen the terminal, then re-check.",
@@ -222,12 +222,12 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
           <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--navy-600);border-radius:var(--radius-lg);padding:24px 26px;box-shadow:var(--shadow-sm)">
             <img src="../../../Design%20System/assets/icons/pdf-icon.png" alt="" style="width:44px;height:44px;object-fit:contain;margin-bottom:12px" />
-            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:8px"><a href="https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf" target="_blank" rel="noopener">Tutorial.pdf</a></div>
+            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:8px"><a href="https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf" target="_blank" rel="noopener">Tutorial.pdf</a></div>
             <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">Building the car and general kit guidance.</p>
           </div>
           <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:24px 26px;box-shadow:var(--shadow-sm)">
             <img src="../../../Design%20System/assets/icons/pdf-icon.png" alt="" style="width:44px;height:44px;object-fit:contain;margin-bottom:12px" />
-            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:8px"><a href="https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener">About_Battery.pdf</a></div>
+            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:8px"><a href="https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener">About_Battery.pdf</a></div>
             <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">Choosing and handling batteries safely.</p>
           </div>
         </div>
@@ -428,7 +428,7 @@
         <div style="display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center">
           <div>
             <div class="row"><span class="dot"></span><p><span class="k">Watch the build video</span> → and follow along — it walks the whole setup, start to finish.</p></div>
-            <div class="row"><span class="dot"></span><p>Open <a href="https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/Tutorial.pdf" target="_blank" rel="noopener"><code class="inl">Resources/Tutorial.pdf</code></a> for the step-by-step photos.</p></div>
+            <div class="row"><span class="dot"></span><p>Open <a href="https://github.com/renashall/smartcar2026/blob/main/Resources/Tutorial.pdf" target="_blank" rel="noopener"><code class="inl">Resources/Tutorial.pdf</code></a> for the step-by-step photos.</p></div>
             <div class="row"><span class="dot"></span><p>Build the frame, mount <b>motors + wheels</b>, attach the <b>head/camera</b>, and seat the <b>Pi</b> on the board.</p></div>
             <div class="row"><span class="dot"></span><p>Take your time and keep <b>screws organized</b>.</p></div>
           </div>
@@ -501,7 +501,7 @@
             <div class="row"><span class="dot"></span><p>The car uses <span class="k">18650</span> rechargeable lithium cells.</p></div>
             <div class="row"><span class="dot"></span><p><span class="k">Buy quality cells</span> — cheap or counterfeit ones can be unsafe and perform poorly.</p></div>
             <div class="row"><span class="dot"></span><p>A reputable source: <a href="https://www.18650batterystore.com/" target="_blank" rel="noopener">18650batterystore.com</a></p></div>
-            <div class="row"><span class="dot"></span><p>Read <a href="https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener"><code class="inl">About_Battery.pdf</code></a> before charging.</p></div>
+            <div class="row"><span class="dot"></span><p>Read <a href="https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener"><code class="inl">About_Battery.pdf</code></a> before charging.</p></div>
           </div>
           <div style="background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden">
             <img src="../../../Design%20System/assets/materials/18650-batteries.png" alt="18650 cells" style="max-width:84%;max-height:84%;object-fit:contain" />
@@ -530,7 +530,7 @@
       <div class="slide__content">
         <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:44px;align-items:center">
           <div>
-            <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 10px"><img src="../../../Design%20System/assets/icons/warning.png" alt="" style="width:28px;height:28px;flex-shrink:0" /><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.45">Use the <b>correct type</b> for the car (see <a href="https://github.com/renashall/Smart-Car-Level-3/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener">About_Battery.pdf</a>).</p></div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 10px"><img src="../../../Design%20System/assets/icons/warning.png" alt="" style="width:28px;height:28px;flex-shrink:0" /><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.45">Use the <b>correct type</b> for the car (see <a href="https://github.com/renashall/smartcar2026/blob/main/Resources/About_Battery.pdf" target="_blank" rel="noopener">About_Battery.pdf</a>).</p></div>
             <div style="display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border-subtle)"><img src="../../../Design%20System/assets/icons/warning.png" alt="" style="width:28px;height:28px;flex-shrink:0" /><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.45">Insert with the right <b>polarity</b> (+ / −), and <b>never short</b> the terminals — keep cells away from coins, keys, metal.</p></div>
             <div style="display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border-subtle)"><img src="../../../Design%20System/assets/icons/error.png" alt="" style="width:28px;height:28px;flex-shrink:0" /><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.45"><b>Don't use damaged</b> cells — dented, leaking, or wrapper torn.</p></div>
             <div style="display:flex;gap:14px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border-subtle)"><img src="../../../Design%20System/assets/icons/warning.png" alt="" style="width:28px;height:28px;flex-shrink:0" /><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.45">Charge with the <b>proper charger</b>; don't leave it charging unattended.</p></div>
@@ -1140,7 +1140,7 @@ ssh pi@192.168.1.50</pre>
 
   <!-- 31 · Download the course code -->
   <section class="slide frame">
-    <!-- SLIDE NOTES (hidden): course repo (HTTPS) — https://github.com/renashall/Smart-Car-Level-3.git · (SSH) — git@github.com:renashall/Smart-Car-Level-3.git -->
+    <!-- SLIDE NOTES (hidden): course repo (HTTPS) — https://github.com/renashall/smartcar2026.git · (SSH) — git@github.com:renashall/smartcar2026.git -->
     <header class="slide__header">
       <div class="slide__brand"><img src="../../../Design%20System/assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
       <span class="slide__num">31</span>
@@ -1157,18 +1157,18 @@ ssh pi@192.168.1.50</pre>
             <div class="row"><span class="dot"></span><p>On the <span class="k">Pi</span> (to drive the car) <b>and</b> on your <span class="k">computer</span> (vision lessons 6-8 &amp; 11).</p></div>
             <div class="row"><span class="dot"></span><p>Get it with <code class="inl">git</code> — the same command everywhere.</p></div>
             <div class="row"><span class="dot"></span><p><span class="k">Use the HTTPS link</span> — it just works, no SSH keys to set up. (SSH is only for advanced users.)</p></div>
-            <div class="row"><span class="dot"></span><p>This creates a <code class="inl">Smart-Car-Level-3</code> folder with all the lesson code.</p></div>
+            <div class="row"><span class="dot"></span><p>This creates a <code class="inl">smartcar2026</code> folder with all the lesson code.</p></div>
             <div class="row"><span class="dot"></span><p>No git? Download the <b>ZIP</b> from the repo page and unzip it.</p></div>
           </div>
           <div class="cwrap">
             <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">any terminal</span></div>
 <pre class="cpre"><span class="co"># HTTPS — use this one ✅</span>
-git clone https://github.com/renashall/Smart-Car-Level-3.git
+git clone https://github.com/renashall/smartcar2026.git
 
 <span class="co"># SSH (advanced — needs SSH keys set up)</span>
-git clone git@github.com:renashall/Smart-Car-Level-3.git
+git clone git@github.com:renashall/smartcar2026.git
 
-cd Smart-Car-Level-3</pre>
+cd smartcar2026</pre>
           </div>
         </div>
       </div>
@@ -1238,7 +1238,7 @@ cd Smart-Car-Level-3</pre>
           </div>
           <div class="cwrap">
             <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">the Pi · terminal</span></div>
-<pre class="cpre">cd Smart-Car-Level-3/Code
+<pre class="cpre">cd smartcar2026/Code
 chmod +x setupPart1.sh setupPart2.sh
 ./setupPart1.sh
 
@@ -1274,7 +1274,7 @@ chmod +x setupPart1.sh setupPart2.sh
           </div>
           <div class="cwrap">
             <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">the Pi · after the reboot</span></div>
-<pre class="cpre">cd Smart-Car-Level-3/Code
+<pre class="cpre">cd smartcar2026/Code
 ./setupPart2.sh
 
 <span class="co"># two scripts, two reboots — by design</span></pre>
@@ -1337,13 +1337,13 @@ chmod +x setupPart1.sh setupPart2.sh
       <div class="slide__content">
         <div style="display:grid;grid-template-columns:.86fr 1.14fr;gap:44px;align-items:center">
           <div>
-            <div class="row"><span class="dot"></span><p>Keep your work in <code class="inl">Smart-Car-Level-3/Code/User</code>, separate from the Freenove code.</p></div>
+            <div class="row"><span class="dot"></span><p>Keep your work in <code class="inl">smartcar2026/Code/User</code>, separate from the Freenove code.</p></div>
             <div class="row"><span class="dot"></span><p>Lesson files start with <code class="inl">import car_setup</code> so the car's modules import cleanly.</p></div>
             <div class="row"><span class="dot"></span><p>We'll explain <code class="inl">car_setup.py</code> properly in <b>Lesson 1</b>.</p></div>
           </div>
           <div class="cwrap">
             <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">project layout</span></div>
-<pre class="cpre">Smart-Car-Level-3/
+<pre class="cpre">smartcar2026/
   Code/
     Server/      <span class="co"># Freenove car code</span>
     Client/      <span class="co"># Freenove desktop app</span>
@@ -1375,7 +1375,7 @@ chmod +x setupPart1.sh setupPart2.sh
           <div>
             <div class="row" style="padding-top:0;border-top:0"><span class="dot"></span><p><span class="k">Thonny</span> comes with Raspberry Pi OS — a beginner-friendly Python editor, nothing to download.</p></div>
             <div class="row"><span class="dot"></span><p>Open it on the Pi desktop (over <span class="k">VNC</span>): <span class="k">Menu → Programming → Thonny</span>.</p></div>
-            <div class="row"><span class="dot"></span><p>Use it to open, write, and <span class="k">save</span> your lesson files in <code class="inl">Smart-Car-Level-3/Code/User</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>Use it to open, write, and <span class="k">save</span> your lesson files in <code class="inl">smartcar2026/Code/User</code>.</p></div>
             <div class="row"><span class="dot"></span><p>You <span class="k">run</span> lessons from the terminal, not Thonny's Run button — more in <b>Lesson 1</b>.</p></div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center">
@@ -1485,7 +1485,7 @@ python3 --version</pre>
           </div>
           <div class="cwrap">
             <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">your computer · repo root</span></div>
-<pre class="cpre">cd Smart-Car-Level-3
+<pre class="cpre">cd smartcar2026
 
 <span class="co"># Windows</span>
 py -m venv .venv
@@ -1595,9 +1595,9 @@ python3 Code/setup.py</pre>
           <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">1</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">The Pi <b>boots</b> and joins Wi-Fi.</p></div>
           <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">2</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">You can <b>SSH</b> in: <code class="inl">ssh pi@mypi.local</code>.</p></div>
           <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">3</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4"><b>VNC Viewer</b> shows the Pi desktop.</p></div>
-          <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">4</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">The <code class="inl">Smart-Car-Level-3</code> folder exists and <b>both scripts ran</b>.</p></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">4</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">The <code class="inl">smartcar2026</code> folder exists and <b>both scripts ran</b>.</p></div>
           <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">5</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">On your computer the <code class="inl">.venv</code> activates and <code class="inl">import cv2</code> runs cleanly.</p></div>
-          <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">6</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">You can <code class="inl">cd Smart-Car-Level-3/Code/User</code>.</p></div>
+          <div style="display:flex;gap:12px;align-items:flex-start"><span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px">6</span><p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.4">You can <code class="inl">cd smartcar2026/Code/User</code>.</p></div>
         </div>
         <div style="margin-top:18px;display:flex;gap:13px;align-items:center;background:var(--navy-600);border-radius:var(--radius-lg);padding:14px 20px;color:#fff">
           <img src="../../../Design%20System/assets/icons/success-light.png" alt="" style="width:30px;height:30px;flex-shrink:0;object-fit:contain" />
