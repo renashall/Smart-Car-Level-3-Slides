@@ -1,6 +1,6 @@
 # smartcar2026-slides
 
-Slide decks for **Machine Learning with Raspberry Pi & Smart Car** (Level 3), an
+Slide decks for **Machine Learning with Raspberry Pi & Smart Car (Level 3)**, an
 AI Code Academy course. This repository holds the lesson plans, the rendered
 decks, and the design system used to build them.
 
