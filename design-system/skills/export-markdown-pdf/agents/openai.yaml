@@ -1,0 +1,9 @@
+interface:
+  display_name: "Export Markdown PDF"
+  short_description: "Export themed PDF documents from Markdown"
+  default_prompt: "Use $export-markdown-pdf to turn this Markdown document into a themed PDF beside it."
+  icon_small: "./assets/small-logo.svg"
+  icon_large: "./assets/large-logo.svg"
+  brand_color: "#FFFFFF"
+policy:
+  allow_implicit_invocation: true

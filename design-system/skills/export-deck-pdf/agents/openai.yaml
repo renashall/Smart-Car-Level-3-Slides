@@ -1,0 +1,9 @@
+interface:
+  display_name: "Export Deck PDF"
+  short_description: "Export HTML lesson decks to selectable PDFs"
+  default_prompt: "Use $export-deck-pdf to export this HTML lesson deck to PDF."
+  icon_small: "./assets/small-logo.svg"
+  icon_large: "./assets/large-logo.svg"
+  brand_color: "#FFFFFF"
+policy:
+  allow_implicit_invocation: true

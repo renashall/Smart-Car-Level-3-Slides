@@ -1,0 +1,9 @@
+interface:
+  display_name: "Slide Deck Design"
+  short_description: "Design rendered Smart Car lesson slides"
+  default_prompt: "Use $slide-deck-design to render this Smart Car lesson plan as slides."
+  icon_small: "./assets/small-logo.svg"
+  icon_large: "./assets/large-logo.svg"
+  brand_color: "#FFFFFF"
+policy:
+  allow_implicit_invocation: true

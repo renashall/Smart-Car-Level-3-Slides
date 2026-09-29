@@ -1,0 +1,9 @@
+interface:
+  display_name: "Export Deck PPTX Screenshot"
+  short_description: "Export HTML decks to screenshot PowerPoint"
+  default_prompt: "Use $export-deck-pptx-screenshot to export this HTML deck to PowerPoint."
+  icon_small: "./assets/small-logo.svg"
+  icon_large: "./assets/large-logo.svg"
+  brand_color: "#FFFFFF"
+policy:
+  allow_implicit_invocation: true

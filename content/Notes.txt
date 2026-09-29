@@ -1,8 +1,0 @@
-Smart Car Course — Notes
-=========================
-
-- Raspberry Pi 5 will not work well with this course. It lacks the ribbon connector for the camera module.
-- It is recommended to use a Pi 4 or 3.
-- Code that lacks the camera should work well. 
-- Code uses the new pycamera2 module, so maybe connecting a new camera will automatically work with it, but it is untested.
-- The Smart Car Kit also currently ships out with the ribbon cable camera module.

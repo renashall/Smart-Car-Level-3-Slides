@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lesson 4 — Autonomous Modes · AI Code Academy</title>
+
+<link rel="stylesheet" href="../../../styles.css" />
+<link rel="stylesheet" href="../../../slides/slide-frame.css" />
+
+<script type="application/json" id="speaker-notes">[
+  "Title — ~1 min. Today the car makes its own decisions. Make sure there's floor space to drive. Run the lesson command with sudo. Site: https://aicodeacademy.com",
+  "Introduction — frame the jump: from remote control to autonomy. Quick recall of which sensor does what — motors (L2), light + battery sensors (L3), servo head + ultrasonic (L1).",
+  "Goals — decide as a class which mode to demo first; sonic is usually more reliable indoors. DEMO_MODE picks the brain that runs. Light = drive toward brightest light; Sonic = look around and dodge.",
+  "Sense -> Think -> Act — this is the key idea of the whole lesson. Everything below is just filling in these three steps. The loop repeats them many times a second.",
+  "Imports (chunk 1/11) — callback to L1-L3: they've met every one of these modules already. Note the lowercase 'from servo import Servo' — file is servo.py.",
+  "Settings: speed & mode (chunk 2/11) — keep speeds modest indoors. DEMO_MODE chooses the brain. They'll tune DRIVE_SPEED / TURN_SPEED in 'try it yourself'.",
+  "M-Light settings (chunk 3/11) — the 'lower voltage = brighter' rule trips everyone up. Say it twice. Two light sensors on ADC channels 0 and 1.",
+  "M-Sonic settings (chunk 4/11) — connect head angles back to L1's servo sweep, same setServoPwm('0', angle) idea. BLOCKED cm is what counts as an obstacle.",
+  "setup() (chunk 5/11) — point out the if/else: clean code only builds what it needs. Both modes drive, so the motor is always made; the rest stay None.",
+  "light_step() (chunk 6/11) — walk through each branch as Sense/Think/Act. The turn tuples are the same trick as Lesson 2. Remember: smaller voltage = brighter.",
+  "look() (chunk 7/11) — helper functions keep the next step short and readable; good habit to highlight. Reused three times in sonic mode (ahead, left, right).",
+  "sonic_step() (chunk 8/11) — the early 'return' = 'clear road, nothing else to do.' Highlight that pattern. If blocked: stop, look left & right, turn toward more room.",
+  "loop() (chunk 9/11) — this is the Sense -> Think -> Act loop made real. Connect back to the concept slide. The tiny sleep keeps the loop from being frantic.",
+  "destroy() (chunk 10/11) — same safety habit as every lesson: leave the car stopped. The 'is not None' guards matter because unused parts were never created.",
+  "Main block (chunk 11/11) — fourth time seeing this try / except KeyboardInterrupt / finally: destroy() wrapper. Students should predict it now.",
+  "Whole file — scroll the assembled file; point out how loop() picks which 'brain' runs. One file, two self-driving modes.",
+  "Run it — clear a driving area first. Set DEMO_MODE to 'sonic' or 'light'. Give it floor space; for light mode use a phone flashlight. Run with sudo. Watch fingers and table edges. Ctrl+C to stop.",
+  "Try it yourself — the LED/beep challenge connects back to Lessons 1 & 2; great for fast finishers. Lower speeds if it's too wild; tweak BLOCKED and SIDE_DIFFERENCE.",
+  "Troubleshooting — most 'weird driving' today is low battery or too-high speed. Check those first. Light mode wrong way = remember lower voltage = brighter; check wiring.",
+  "Recap — celebrate the Sense -> Think -> Act loop and two autonomous modes. Tease Lesson 5: line following, a third kind of 'sense and steer' using the infrared sensors.",
+  "COACH (hidden) — do not present. After class: post the recap, log absent students in the Discord #attendance channel. Before next class charge the cars and clear floor space for Lesson 5."
+]</script>
+
+<style>
+  body { margin: 0; background: #e9ecf4; }
+  .deck { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 44px; width: max-content; margin: 0 auto; }
+  .frame { border-radius: 6px; box-shadow: 0 16px 44px rgba(19,33,66,.16); flex: none; }
+
+  /* code panel */
+  .cwrap { background: var(--surface-code); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+  .cbar { display: flex; gap: 8px; align-items: center; padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .cbar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .cfile { margin-left: 8px; font-size: 13px; color: var(--neutral-400); font-family: var(--font-mono); }
+  .cpre { margin: 0; padding: 16px 20px; font-size: 14px; line-height: 1.6; color: #e8eaed; font-family: var(--font-mono); white-space: pre; overflow: hidden; }
+  .cpre.sm { font-size: 13px; }
+  .cpre.xs { font-size: 11.5px; line-height: 1.42; }
+  .cpre .co { color: var(--neutral-500); } .cpre .kw { color: var(--amber-300); } .cpre .st { color: var(--teal-300); } .cpre .fn { color: #8fd0ff; } .cpre .nm { color: #e8eaed; }
+
+  /* small shared bits */
+  .pnum { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--navy-600); color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+  .dot { margin-top: 8px; flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--teal-300); }
+  .row { display: flex; gap: 13px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--border-subtle); }
+  .row:first-child { border-top: 0; padding-top: 0; }
+  .row p { margin: 0; font-size: 16px; color: var(--text-body); line-height: 1.5; }
+  .k { color: var(--text-strong); font-weight: 700; }
+  code.inl { font-family: var(--font-mono); font-size: 13.5px; background: var(--neutral-100); padding: 1px 6px; border-radius: 5px; color: var(--navy-700); }
+
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .deck { gap: 0; padding: 0; }
+    .frame { border-radius: 0; box-shadow: none; }
+    .slide { page-break-after: always; break-after: page; }
+    .slide:last-child { page-break-after: auto; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- 01 · Title -->
+  <!-- SLIDE NOTES (hidden): site — https://aicodeacademy.com -->
+  <section class="slide frame slide--dark" style="background:var(--navy-600)">
+    <div style="position:absolute;width:560px;height:560px;right:-180px;top:-180px;border-radius:50%;background:var(--navy-500);opacity:.5"></div>
+    <div style="position:absolute;width:300px;height:300px;right:120px;bottom:-120px;border-radius:50%;background:var(--teal-300);opacity:.16"></div>
+    <div class="slide__dot" style="right:150px;top:470px;width:30px;height:30px"></div>
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">01</span>
+    </header>
+    <div class="slide__body">
+      <div style="display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center;height:100%">
+        <div style="display:flex;flex-direction:column;justify-content:center">
+          <div class="slide__eyebrow" style="margin-bottom:22px">Lesson 4 — Autonomous modes</div>
+          <h1 class="slide__title" style="font-size:50px;max-width:560px">Machine Learning with Raspberry Pi &amp; Smart Car</h1>
+          <p class="slide__lead" style="margin-top:24px;max-width:520px">Today the car makes its own decisions — using its sensors to drive itself, with no commands from us.</p>
+        </div>
+        <div style="background:transparent;height:400px;display:flex;align-items:center;justify-content:center">
+          <img src="../../../assets/main/smart-car-full.png" alt="The Freenove 4WD smart car" style="max-width:100%;max-height:100%;object-fit:contain" />
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <a class="site" href="https://aicodeacademy.com" target="_blank" rel="noopener">aicodeacademy.com</a>
+    </footer>
+  </section>
+
+  <!-- 02 · Introduction -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">02</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">From remote control to autonomy</h1>
+        <p class="slide__desc">So far <i>we</i> told the car exactly what to do. Today it decides for itself.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>You've used <span class="k">motors</span> (L2), <span class="k">light + battery sensors</span> (L3), the <span class="k">servo head</span> and <span class="k">ultrasonic</span> (L1).</p></div>
+            <div class="row"><span class="dot"></span><p>Until now, every move came from a <b>command we sent</b>.</p></div>
+            <div class="row"><span class="dot"></span><p><span class="k">Today:</span> the car uses those same sensors to <b>drive itself</b> — no commands from us.</p></div>
+          </div>
+          <div style="background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <img src="../../../assets/main/smart-car-side-full.png" alt="Smart car, side view" style="max-width:90%;max-height:86%;object-fit:contain" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 03 · Our goals -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">03</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">Today's goal: one car, two brains</h1>
+        <p class="slide__desc">Build a self-driving car with two modes — pick one with <code class="inl">DEMO_MODE</code>.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.18fr .82fr;gap:44px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:18px 22px;box-shadow:var(--shadow-sm)">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+                <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--amber-100);color:var(--amber-800);padding:3px 10px;border-radius:var(--radius-pill)">"light"</span>
+                <div style="font-size:20px;font-weight:800;color:var(--navy-700)">M-Light</div>
+              </div>
+              <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">Drive toward the <b>brightest light</b> using the two light sensors.</p>
+            </div>
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:18px 22px;box-shadow:var(--shadow-sm)">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+                <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--teal-100);color:var(--teal-800);padding:3px 10px;border-radius:var(--radius-pill)">"sonic"</span>
+                <div style="font-size:20px;font-weight:800;color:var(--navy-700)">M-Sonic</div>
+              </div>
+              <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">Look around with the head + ultrasonic and <b>steer around obstacles</b>.</p>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+            <img src="../../../assets/icons/car-black.png" alt="" style="width:96px;height:96px;object-fit:contain" />
+            <p style="font-size:17px;color:var(--text-muted);margin:0;line-height:1.5">Both modes run the same idea: the <b style="color:var(--navy-700)">Sense → Think → Act</b> loop that powers all robots.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 04 · Sense -> Think -> Act -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">04</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">Sense → Think → Act</h1>
+        <p class="slide__desc">Every autonomous robot repeats three steps, fast — many times a second.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch">
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:10px">
+            <div style="width:48px;height:48px;border-radius:var(--radius-md);background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">1</div>
+            <div style="font-size:21px;font-weight:800;color:var(--navy-700)">Sense</div>
+            <p style="margin:0;font-size:15px;color:var(--text-muted);line-height:1.45">Read the sensors — light voltages, or distance ahead.</p>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:10px">
+            <div style="width:48px;height:48px;border-radius:var(--radius-md);background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">2</div>
+            <div style="font-size:21px;font-weight:800;color:var(--navy-700)">Think</div>
+            <p style="margin:0;font-size:15px;color:var(--text-muted);line-height:1.45">Decide what to do with those numbers — go, turn, or stop.</p>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:10px">
+            <div style="width:48px;height:48px;border-radius:var(--radius-md);background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">3</div>
+            <div style="font-size:21px;font-weight:800;color:var(--navy-700)">Act</div>
+            <p style="margin:0;font-size:15px;color:var(--text-muted);line-height:1.45">Drive the motors based on the decision.</p>
+          </div>
+        </div>
+        <div style="margin-top:20px;display:flex;gap:13px;align-items:center;background:var(--navy-600);border-radius:var(--radius-lg);padding:14px 20px;color:#fff">
+          <img src="../../../assets/icons/config-wheel-white.png" alt="" style="width:30px;height:30px;flex-shrink:0;object-fit:contain" />
+          <p style="margin:0;font-size:16px;color:var(--teal-100);line-height:1.45">Our <code class="inl" style="background:rgba(255,255,255,.12);color:#fff">loop()</code> repeats these three steps over and over — that's the whole lesson.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 05 · Imports (chunk 1/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">05</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 1</div>
+        <h1 class="slide__title">Start the file: imports</h1>
+        <p class="slide__desc">Pull in motors plus the sensors both modes might use.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">import car_setup</code> first — it finds the car's modules.</p></div>
+            <div class="row"><span class="dot"></span><p>The <span class="k">motor</span> drives; both modes need it.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">from servo import Servo</code> — remember, the file is lowercase <code class="inl">servo.py</code>.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre"><span class="st">"""Lesson 4: Autonomous Modes."""</span>
+
+<span class="kw">import</span> car_setup        <span class="co"># add the car's code folders</span>
+<span class="kw">import</span> time
+
+<span class="kw">from</span> motor <span class="kw">import</span> Motor          <span class="co"># driving wheels</span>
+<span class="kw">from</span> adc <span class="kw">import</span> Adc              <span class="co"># light sensors</span>
+<span class="kw">from</span> servo <span class="kw">import</span> Servo          <span class="co"># turns the head</span>
+<span class="kw">from</span> ultrasonic <span class="kw">import</span> Ultrasonic   <span class="co"># measures distance</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 06 · Settings: speed & mode (chunk 2/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">06</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 2</div>
+        <h1 class="slide__title">Settings: speed and mode</h1>
+        <p class="slide__desc"><code class="inl">DEMO_MODE</code> chooses which brain runs; two speeds control how it drives.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">DEMO_MODE</code> picks the brain — <code class="inl">"light"</code> or <code class="inl">"sonic"</code>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">DRIVE_SPEED</code> = a gentle forward power.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">TURN_SPEED</code> = a stronger turning power. Keep both modest indoors.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre"><span class="co"># ---- settings you can change ----</span>
+DEMO_MODE = <span class="st">"sonic"</span>       <span class="co"># "light" or "sonic"</span>
+DRIVE_SPEED = <span class="kw">1200</span>        <span class="co"># forward power (0..4095)</span>
+TURN_SPEED = <span class="kw">1500</span>         <span class="co"># turning power</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 07 · M-Light settings (chunk 3/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">07</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 3</div>
+        <h1 class="slide__title">M-Light: follow the light</h1>
+        <p class="slide__desc">Two light sensors on ADC channels 0 and 1 — <b>lower voltage means more light</b>.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.04fr .96fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <div style="display:flex;gap:13px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:13px 16px;box-shadow:var(--shadow-sm)">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</div>
+              <p style="margin:0;font-size:15.5px;color:var(--text-body);line-height:1.4">Both sides bright → <b>go straight</b></p>
+            </div>
+            <div style="display:flex;gap:13px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:13px 16px;box-shadow:var(--shadow-sm)">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:18px">↪</div>
+              <p style="margin:0;font-size:15.5px;color:var(--text-body);line-height:1.4">One side brighter → <b>turn toward it</b></p>
+            </div>
+            <div style="display:flex;gap:13px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--navy-600);border-radius:var(--radius-lg);padding:13px 16px;box-shadow:var(--shadow-sm)">
+              <div style="width:30px;height:30px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">■</div>
+              <p style="margin:0;font-size:15.5px;color:var(--text-body);line-height:1.4">Dim and even → <b>wait</b></p>
+            </div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre sm"><span class="co"># M-Light: light sensors on channels 0, 1.</span>
+<span class="co"># LOWER voltage = MORE light.</span>
+LEFT_LIGHT = <span class="kw">0</span>
+RIGHT_LIGHT = <span class="kw">1</span>
+BRIGHT_ENOUGH = <span class="kw">2.99</span>      <span class="co"># below this = light</span>
+SIDE_DIFFERENCE = <span class="kw">0.15</span>    <span class="co"># gap to turn</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 08 · M-Sonic settings (chunk 4/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">08</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 4</div>
+        <h1 class="slide__title">M-Sonic: dodge obstacles</h1>
+        <p class="slide__desc">Use the head servo + ultrasonic to look <b>ahead, left, and right</b>.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.02fr .98fr;gap:40px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Three head angles to check: <b>left, center, right</b>.</p></div>
+            <div class="row"><span class="dot"></span><p>Anything closer than <code class="inl">BLOCKED</code> cm counts as an <b>obstacle</b>.</p></div>
+            <div class="row"><span class="dot"></span><p>Same <code class="inl">setServoPwm("0", angle)</code> head-sweep idea as Lesson 1.</p></div>
+            <div style="margin-top:18px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);padding:18px 20px;display:flex;flex-direction:column;align-items:center;gap:10px">
+              <img src="../../../assets/materials/electronic-parts/ultrasonic-sensor.png" alt="Ultrasonic distance sensor" style="max-width:250px;max-height:150px;object-fit:contain" />
+              <div style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Ultrasonic distance sensor</div>
+            </div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre sm"><span class="co"># M-Sonic: head angles, and "too close".</span>
+HEAD_LEFT = <span class="kw">30</span>
+HEAD_CENTER = <span class="kw">90</span>
+HEAD_RIGHT = <span class="kw">150</span>
+BLOCKED = <span class="kw">30</span>              <span class="co"># closer = obstacle (cm)</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 09 · setup() (chunk 5/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">09</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 5</div>
+        <h1 class="slide__title">setup(): build only what you need</h1>
+        <p class="slide__desc">Both modes drive, so always make the motor — then create only the chosen mode's sensors.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.78fr 1.22fr;gap:40px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Parts start as <code class="inl">None</code>; build them in <code class="inl">setup()</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>The <code class="inl">if/else</code> only builds what the mode needs — the rest stay <code class="inl">None</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>Sonic mode starts the head looking <b>straight ahead</b>.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre xs">motor = <span class="kw">None</span>
+adc = <span class="kw">None</span>
+servo = <span class="kw">None</span>
+ultrasonic = <span class="kw">None</span>
+
+<span class="kw">def</span> <span class="fn">setup</span>():
+    <span class="st">"""Build just the hardware this mode needs."""</span>
+    <span class="kw">global</span> motor, adc, servo, ultrasonic
+    motor = <span class="fn">Motor</span>()                  <span class="co"># both modes drive</span>
+    <span class="kw">if</span> DEMO_MODE == <span class="st">"light"</span>:
+        adc = <span class="fn">Adc</span>()                  <span class="co"># light sensors</span>
+    <span class="kw">else</span>:
+        servo = <span class="fn">Servo</span>()              <span class="co"># head + sensor</span>
+        ultrasonic = <span class="fn">Ultrasonic</span>()
+        servo.<span class="fn">setServoPwm</span>(<span class="st">"0"</span>, HEAD_CENTER)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 10 · light_step() (chunk 6/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">10</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 6</div>
+        <h1 class="slide__title">light_step(): steer toward light</h1>
+        <p class="slide__desc">One pass of Sense → Think → Act for light mode: read both sensors, compare, drive.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.74fr 1.26fr;gap:38px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><b>Sense:</b> read the left and right light channels.</p></div>
+            <div class="row"><span class="dot"></span><p><b>Think:</b> both bright → straight; one side brighter → turn.</p></div>
+            <div class="row"><span class="dot"></span><p><b>Act:</b> the turn tuples are the same trick as Lesson 2.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre xs"><span class="kw">def</span> <span class="fn">light_step</span>():
+    left = adc.<span class="fn">recvADC</span>(LEFT_LIGHT)
+    right = adc.<span class="fn">recvADC</span>(RIGHT_LIGHT)
+    <span class="co"># smaller voltage = brighter</span>
+    <span class="kw">if</span> left &lt; BRIGHT_ENOUGH <span class="kw">and</span> right &lt; BRIGHT_ENOUGH:
+        motor.<span class="fn">setMotorModel</span>(DRIVE_SPEED, DRIVE_SPEED, DRIVE_SPEED, DRIVE_SPEED)
+    <span class="kw">elif</span> left - right &gt; SIDE_DIFFERENCE:
+        motor.<span class="fn">setMotorModel</span>(-TURN_SPEED, -TURN_SPEED, TURN_SPEED, TURN_SPEED)
+    <span class="kw">elif</span> right - left &gt; SIDE_DIFFERENCE:
+        motor.<span class="fn">setMotorModel</span>(TURN_SPEED, TURN_SPEED, -TURN_SPEED, -TURN_SPEED)
+    <span class="kw">else</span>:
+        motor.<span class="fn">setMotorModel</span>(<span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 11 · look() (chunk 7/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">11</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 7</div>
+        <h1 class="slide__title">look(): aim and measure</h1>
+        <p class="slide__desc">A small helper — point the head at an angle, wait for it to arrive, then measure.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Turn the head to <code class="inl">angle</code>, then read the distance there.</p></div>
+            <div class="row"><span class="dot"></span><p>The <code class="inl">sleep(0.3)</code> gives the head time to finish moving.</p></div>
+            <div class="row"><span class="dot"></span><p>Reused <b>three times</b> in sonic mode — ahead, left, right.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre"><span class="kw">def</span> <span class="fn">look</span>(angle):
+    <span class="st">"""Aim the head, then measure distance (cm)."""</span>
+    servo.<span class="fn">setServoPwm</span>(<span class="st">"0"</span>, angle)
+    time.<span class="fn">sleep</span>(<span class="kw">0.3</span>)                  <span class="co"># let the head settle</span>
+    <span class="kw">return</span> ultrasonic.<span class="fn">get_distance</span>()</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 12 · sonic_step() (chunk 8/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">12</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 8</div>
+        <h1 class="slide__title">sonic_step(): look, then turn</h1>
+        <p class="slide__desc">If the path ahead is clear, drive. If blocked, stop, look both ways, and turn to open space.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.7fr 1.3fr;gap:34px;align-items:start">
+          <div>
+            <div class="row"><span class="dot"></span><p>Clear ahead → drive forward, then <code class="inl">return</code> early.</p></div>
+            <div class="row"><span class="dot"></span><p>Blocked → stop, measure left and right.</p></div>
+            <div class="row"><span class="dot"></span><p>Turn toward the side with <b>more room</b>.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre xs"><span class="kw">def</span> <span class="fn">sonic_step</span>():
+    ahead = <span class="fn">look</span>(HEAD_CENTER)
+    <span class="kw">if</span> ahead &gt; BLOCKED:
+        motor.<span class="fn">setMotorModel</span>(DRIVE_SPEED, DRIVE_SPEED, DRIVE_SPEED, DRIVE_SPEED)
+        <span class="kw">return</span>                              <span class="co"># clear road</span>
+
+    motor.<span class="fn">setMotorModel</span>(<span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>)         <span class="co"># stop and look</span>
+    left = <span class="fn">look</span>(HEAD_LEFT)
+    right = <span class="fn">look</span>(HEAD_RIGHT)
+    servo.<span class="fn">setServoPwm</span>(<span class="st">"0"</span>, HEAD_CENTER)    <span class="co"># re-center the head</span>
+    <span class="kw">if</span> left &gt; right:
+        motor.<span class="fn">setMotorModel</span>(-TURN_SPEED, -TURN_SPEED, TURN_SPEED, TURN_SPEED)
+    <span class="kw">else</span>:
+        motor.<span class="fn">setMotorModel</span>(TURN_SPEED, TURN_SPEED, -TURN_SPEED, -TURN_SPEED)
+    time.<span class="fn">sleep</span>(<span class="kw">0.5</span>)                      <span class="co"># turn briefly</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 13 · loop() (chunk 9/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">13</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 9</div>
+        <h1 class="slide__title">loop(): run the chosen mode</h1>
+        <p class="slide__desc">Repeat the right single step forever, with a tiny pause — the Sense → Think → Act loop made real.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">DEMO_MODE</code> decides which single step runs each pass.</p></div>
+            <div class="row"><span class="dot"></span><p>The <code class="inl">while True</code> repeats it many times a second.</p></div>
+            <div class="row"><span class="dot"></span><p>A tiny <code class="inl">sleep(0.05)</code> keeps the loop from being frantic.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre"><span class="kw">def</span> <span class="fn">loop</span>():
+    <span class="st">"""Repeat the chosen mode's step over and over."""</span>
+    <span class="kw">while True</span>:
+        <span class="kw">if</span> DEMO_MODE == <span class="st">"light"</span>:
+            <span class="fn">light_step</span>()
+        <span class="kw">else</span>:
+            <span class="fn">sonic_step</span>()
+        time.<span class="fn">sleep</span>(<span class="kw">0.05</span>)             <span class="co"># a tiny pause</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 14 · destroy() (chunk 10/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">14</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 10</div>
+        <h1 class="slide__title">Clean up: destroy()</h1>
+        <p class="slide__desc">Stop driving, re-center the head, and close the sensor connection.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.82fr 1.18fr;gap:42px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">setMotorModel(0, 0, 0, 0)</code> stops the wheels.</p></div>
+            <div class="row"><span class="dot"></span><p>Re-center the head and <code class="inl">i2cClose()</code> the ADC.</p></div>
+            <div class="row"><span class="dot"></span><p>Guard with <code class="inl">is not None</code> — unused parts were never created.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre sm"><span class="kw">def</span> <span class="fn">destroy</span>():
+    <span class="st">"""Stop the car and tidy up the hardware."""</span>
+    <span class="kw">if</span> motor <span class="kw">is not None</span>:
+        motor.<span class="fn">setMotorModel</span>(<span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>, <span class="kw">0</span>)       <span class="co"># stop</span>
+    <span class="kw">if</span> servo <span class="kw">is not None</span>:
+        servo.<span class="fn">setServoPwm</span>(<span class="st">"0"</span>, HEAD_CENTER)   <span class="co"># face front</span>
+    <span class="kw">if</span> adc <span class="kw">is not None</span>:
+        adc.<span class="fn">i2cClose</span>()                        <span class="co"># close ADC</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 15 · Main block (chunk 11/11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">15</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes · the file, chunk 11</div>
+        <h1 class="slide__title">The main block</h1>
+        <p class="slide__desc">The familiar wrapper: <code class="inl">try</code> runs the work, <code class="inl">finally</code> always cleans up.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.92fr 1.08fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">try</code> runs <code class="inl">setup()</code> then <code class="inl">loop()</code>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">except KeyboardInterrupt</code> catches <b>Ctrl+C</b>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">finally</code> guarantees <code class="inl">destroy()</code> runs no matter what.</p></div>
+            <div class="row"><span class="dot"></span><p>Fourth time seeing this block — you should predict it now.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_4_autonomous_modes.py</span></div>
+<pre class="cpre"><span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="kw">try</span>:
+        <span class="fn">setup</span>()
+        <span class="fn">loop</span>()
+    <span class="kw">except</span> KeyboardInterrupt:
+        <span class="kw">pass</span>
+    <span class="kw">finally</span>:
+        <span class="fn">destroy</span>()</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 16 · We built the whole file -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">16</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">You built the whole file 🎉</h1>
+        <p class="slide__desc">One file, two self-driving brains — <code class="inl">loop()</code> picks which one runs.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:48px;align-items:center">
+          <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center">
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">imports</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">settings</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">setup()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--amber-100);color:var(--amber-800);font-family:var(--font-mono);font-size:14px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill)">light_step()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--teal-pill);color:var(--teal-pill-text);font-family:var(--font-mono);font-size:14px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill)">look()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--teal-pill);color:var(--teal-pill-text);font-family:var(--font-mono);font-size:14px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill)">sonic_step()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">loop()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">destroy()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">main block</span>
+            <p style="width:100%;margin:14px 0 0;font-size:17px;color:var(--text-muted);line-height:1.5">The <span style="color:var(--amber-800);font-weight:700">amber</span> and <span style="color:var(--teal-pill-label);font-weight:700">teal</span> pieces are the two "brains" — <code class="inl">loop()</code> runs just one of them.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+            <img src="../../../assets/icons/success.png" alt="" style="width:120px;height:120px;object-fit:contain" />
+            <p style="font-size:17px;color:var(--text-strong);font-weight:600;margin:0">One file, two self-driving modes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 17 · Run it -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">17</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">Run it</h1>
+        <p class="slide__desc">Set <code class="inl">DEMO_MODE</code>, then run on the <b>Pi</b> — and give it floor space.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.92fr 1.08fr;gap:40px;align-items:center">
+          <div>
+            <div class="row" style="padding-top:0;border-top:0"><span class="dot"></span><p>Set <code class="inl">DEMO_MODE</code> to <code class="inl">"sonic"</code> or <code class="inl">"light"</code> first.</p></div>
+            <div class="row"><span class="dot"></span><p>For <b>light mode</b>, use a phone flashlight to lead it.</p></div>
+            <div class="row"><span class="dot"></span><p>Press <code class="inl">Ctrl+C</code> to stop. Use <code class="inl">sudo</code> for the run command.</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="cwrap">
+              <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
+<pre class="cpre sm">cd smartcar2026/Code/User
+sudo python3 lesson_4_autonomous_modes.py</pre>
+            </div>
+            <div style="display:flex;gap:13px;align-items:center;background:var(--amber-100);border:1px solid var(--amber-300);border-radius:var(--radius-lg);padding:14px 18px">
+              <img src="../../../assets/icons/warning.png" alt="" style="width:34px;height:34px;flex-shrink:0;object-fit:contain" />
+              <p style="margin:0;font-size:15.5px;color:var(--amber-800);line-height:1.45"><b>Clear a driving area first.</b> Watch fingers and table edges.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 18 · Try it yourself -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">18</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">Try it yourself</h1>
+        <p class="slide__desc">Tune the settings, watch how the car's behavior changes, then push further.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Lower <code class="inl">DRIVE_SPEED</code> / <code class="inl">TURN_SPEED</code> if it's too wild.</p></div>
+            <div class="row"><span class="dot"></span><p>Change <code class="inl">BLOCKED</code> (sonic) — does it stop sooner or later?</p></div>
+            <div class="row"><span class="dot"></span><p>Change <code class="inl">SIDE_DIFFERENCE</code> (light) — more or less twitchy?</p></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:28px 30px;color:#fff;box-shadow:var(--shadow-lg)">
+            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300);margin-bottom:8px">Challenge</div>
+            <div style="font-size:21px;font-weight:800;color:#fff;margin-bottom:10px">React to an obstacle</div>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.55"><b>Beep</b> or <b>flash an LED</b> when the car spots an obstacle — reuse the buzzer and LEDs from Lessons 1 &amp; 2.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 19 · Troubleshooting -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">19</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">Common issues</h1>
+        <p class="slide__desc">If the driving looks off, it's almost always one of these.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:46px;align-items:center">
+          <div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:0 0 12px"><img src="../../../assets/icons/warning.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Turns the wrong way (light)</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">Remember <b>lower voltage = brighter</b>; check the left/right wiring.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/warning.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Spins in circles (sonic)</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45"><code class="inl">BLOCKED</code> too high, or the head isn't centered. Lower the speeds.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/error.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Won't move</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">Battery low, or <code class="inl">DEMO_MODE</code> needs sensors that aren't connected.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/error.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Head doesn't turn</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">Servo is on channel <code class="inl">"0"</code>; give it time — <code class="inl">look()</code> waits 0.3 s.</div></div></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:32px 30px;color:#fff;box-shadow:var(--shadow-lg)">
+            <img src="../../../assets/icons/stop.png" alt="" style="width:54px;height:54px;object-fit:contain;margin-bottom:16px" />
+            <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:10px">Check these first</div>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.55">Most "weird driving" today is a <b>low battery</b> or <b>too-high speed</b>. Rule those out before anything else.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 20 · Recap & what's next -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">20</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 4 — Autonomous modes</div>
+        <h1 class="slide__title">The car drives itself!</h1>
+        <p class="slide__desc">You built the Sense → Think → Act loop and two autonomous modes.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:52px;align-items:stretch">
+          <div style="display:flex;flex-direction:column;justify-content:center">
+            <div style="display:flex;gap:14px;align-items:center;padding:0 0 13px;font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>Built the <b>Sense → Think → Act</b> loop that powers all robots</div>
+            <div style="display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid var(--border-subtle);font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>Wrote two modes: follow the light, and dodge obstacles</div>
+            <div style="display:flex;gap:14px;align-items:center;padding:13px 0 0;border-top:1px solid var(--border-subtle);font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>The car now reacts to <b>light</b> and <b>obstacles</b> on its own</div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:32px;color:#fff;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;justify-content:center">
+            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300)">Up next</div>
+            <h3 style="font-size:28px;font-weight:800;color:#fff;margin:10px 0 10px">Lesson 5<br/>Line following</h3>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.5">Follow a line on the floor using the infrared sensors — a third kind of "sense and steer".</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+  <!-- 21 · End-of-class checklist (HIDDEN — coach) -->
+  <section class="slide frame">
+    <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:var(--amber-400)"></div>
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">21</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <span style="display:inline-flex;align-items:center;gap:8px;background:var(--amber-100);color:var(--amber-800);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:5px 12px;border-radius:var(--radius-pill)">● Coach only · hidden slide</span>
+        <h1 class="slide__title" style="margin-top:12px">End-of-class checklist</h1>
+        <p class="slide__desc">Don't present this slide. Run through it right after class.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.35fr .65fr;gap:44px;align-items:start">
+          <div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 16px"><span class="pnum">1</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Post the after-class recap</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Summarise what you covered on the class page so students can catch up.</p></div></div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-top:1px solid var(--border-subtle)"><span class="pnum">2</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Log absent students</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Post anyone who missed class in the <span style="color:var(--navy-600);font-weight:700;font-family:var(--font-mono);font-size:13.5px">#attendance</span> Discord channel.</p></div></div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:16px 0 0;border-top:1px solid var(--border-subtle)"><span class="pnum">3</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Prep for next class</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Charge the cars and clear floor space for <b>Lesson 5 — line following</b>.</p></div></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:26px;color:#fff;box-shadow:var(--shadow-md)">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300);margin-bottom:14px">Every class</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0">✓ Post a class announcement</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0;border-top:1px solid rgba(255,255,255,.15)">✓ Introductions if needed</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0;border-top:1px solid rgba(255,255,255,.15)">✓ Note absences in #attendance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 4</span>
+    </footer>
+  </section>
+
+</div>
+</body>
+</html>

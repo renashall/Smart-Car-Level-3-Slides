@@ -1,0 +1,9 @@
+interface:
+  display_name: "Slide Lesson Planner"
+  short_description: "Plan Smart Car lessons as Markdown slides"
+  default_prompt: "Use $slide-lesson-planner to plan this Smart Car lesson as a Markdown slide outline."
+  icon_small: "./assets/small-logo.svg"
+  icon_large: "./assets/large-logo.svg"
+  brand_color: "#FFFFFF"
+policy:
+  allow_implicit_invocation: true

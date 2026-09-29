@@ -23,15 +23,16 @@ exports/
 renders/
 previews/
 *.log
-content/old-slide-decks
+design-system/content/old-slide-decks
 
-# Exported deck deliverables (any folder under content/)
-content/**/*.pdf
-content/**/*.pptx
+# Exported deck deliverables (any folder under design-system/content/)
+design-system/content/**/*.pdf
+design-system/content/**/*.pptx
 
 # Local root-level copies of exported decks
 /PDF/
 /PPTX/
 
-# Aggregated export bundle (rendered decks + plans + links)
+# Aggregated export bundles
 Export/
+/Exports/

@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lesson 3 — ADC &amp; Multithreading · AI Code Academy</title>
+
+<link rel="stylesheet" href="../../../styles.css" />
+<link rel="stylesheet" href="../../../slides/slide-frame.css" />
+
+<script type="application/json" id="speaker-notes">[
+  "Title — ~1 min. Two big ideas today: reading analog sensors, and doing two things at once. Site: https://aicodeacademy.com",
+  "Introduction — quick verbal check before moving on: 'what does the # do in a command string?' Reuse the setup -> work -> destroy framing from Lessons 1 and 2.",
+  "Goals — emphasise 'at the same time'. That's the new concept, not just reading sensors. Show the finished demo once if you can so they know the target.",
+  "What is an ADC — analogy: a dimmer switch (smooth) vs a light switch (on/off). The ADC reads the dimmer's position as a number. adc.recvADC(channel) returns volts.",
+  "The sensors — have students physically find the two little light sensors (photoresistors) on their board. 'Read a sensor' = 'read its channel number'. Asset to source: close-up photo of the two photoresistors.",
+  "Battery math — the ADC sees one third of the pack voltage, so multiply by 3. Tie to real life: phones do the same voltage -> percent estimate.",
+  "What is multithreading — analogy: cooking dinner (main thread) while a timer watches the oven (background thread). Both happen at once. Asset to source: a simple two-threads-side-by-side diagram.",
+  "Threads, daemons & the stop flag — keep it light. 'daemon = quits with the program' and 'Event = a stop switch' is enough. Don't go deep on OS theory.",
+  "Imports (chunk 1) — point out that Thread and Event are standard Python, not car-specific. car_setup must be imported first.",
+  "ADC channels (chunk 2) — naming the channels instead of bare 0/1/2 is a good-code habit worth praising.",
+  "Battery thresholds (chunk 3) — these are the numbers students will tweak on the 'try it yourself' slide.",
+  "Empty boxes + the stop flag (chunk 4) — the flag exists BEFORE the thread that reads it. Order matters. Event() starts 'not set'; we call set() to stop.",
+  "setup() starts the thread (chunk 5) — three steps for a thread: make it (Thread(...)), set daemon, start it. We write monitor_battery next.",
+  "Reading & scaling the battery (chunk 6) — optional: ask what int(7.6 V) maps to (~42%) to check understanding. Remember the x3.",
+  "beep() helper (chunk 7) — reuses the buzzer '1'/'0' string idea from Lesson 2 — quick callback. '_' is a throwaway counter.",
+  "monitor_battery() (chunk 8) — 'while not stop_event.is_set()' is how the thread knows when to quit. Link it forward to destroy(). Beeps more the lower it gets.",
+  "loop() the main thread (chunk 9) — now there are TWO while loops alive at once (this one + monitor_battery). That's multithreading in action.",
+  "destroy() (chunk 10) — the payoff for the daemon/Event slide: set the flag, join(timeout=2) so we never hang, then i2cClose() to close the ADC.",
+  "Main block (chunk 11) — third lesson in a row with this try / except / finally block. Students should recognise it instantly now.",
+  "Whole file (chunk 12) — scroll the assembled file; highlight the TWO functions that loop (loop and monitor_battery).",
+  "Run it — point at the mixed output: proof both threads run at once. Light prints every 1 s, battery every 3 s. Use sudo for consistency across the course. Ctrl+C to stop.",
+  "Try it yourself — demo 'cover the sensor' early; it's the most tangible moment. The brighter-side challenge previews line-following / light-seeking logic.",
+  "Troubleshooting — if I2C errors appear, check raspi-config (I2C enabled) and the ADC seating. Remember the battery x3. Give Ctrl+C a second to join the thread.",
+  "Recap — celebrate: they've now touched every core subsystem of the car (lights, sound, motors, commands, sensors). Next: smarter, more autonomous behavior.",
+  "COACH (hidden) — do not present. After class: post the recap, log absent students in the Discord #attendance channel. Before next class confirm I2C is enabled on each Pi and charge the cars."
+]</script>
+
+<style>
+  body { margin: 0; background: #e9ecf4; }
+  .deck { display: flex; flex-direction: column; align-items: center; gap: 30px; padding: 44px; width: max-content; margin: 0 auto; }
+  .frame { border-radius: 6px; box-shadow: 0 16px 44px rgba(19,33,66,.16); flex: none; }
+
+  /* code panel */
+  .cwrap { background: var(--surface-code); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; }
+  .cbar { display: flex; gap: 8px; align-items: center; padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .cbar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .cfile { margin-left: 8px; font-size: 13px; color: var(--neutral-400); font-family: var(--font-mono); }
+  .cpre { margin: 0; padding: 16px 20px; font-size: 14px; line-height: 1.6; color: #e8eaed; font-family: var(--font-mono); white-space: pre; overflow: hidden; }
+  .cpre.sm { font-size: 13px; }
+  .cpre .co { color: var(--neutral-500); } .cpre .kw { color: var(--amber-300); } .cpre .st { color: var(--teal-300); } .cpre .fn { color: #8fd0ff; } .cpre .nm { color: #e8eaed; }
+
+  /* small shared bits */
+  .pnum { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--navy-600); color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; }
+  .dot { margin-top: 8px; flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--teal-300); }
+  .row { display: flex; gap: 13px; align-items: flex-start; padding: 11px 0; border-top: 1px solid var(--border-subtle); }
+  .row:first-child { border-top: 0; padding-top: 0; }
+  .row p { margin: 0; font-size: 16px; color: var(--text-body); line-height: 1.5; }
+  .k { color: var(--text-strong); font-weight: 700; }
+  code.inl { font-family: var(--font-mono); font-size: 13.5px; background: var(--neutral-100); padding: 1px 6px; border-radius: 5px; color: var(--navy-700); }
+
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .deck { gap: 0; padding: 0; }
+    .frame { border-radius: 0; box-shadow: none; }
+    .slide { page-break-after: always; break-after: page; }
+    .slide:last-child { page-break-after: auto; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- 01 · Title -->
+  <!-- SLIDE NOTES (hidden): site — https://aicodeacademy.com -->
+  <section class="slide frame slide--dark" style="background:var(--navy-600)">
+    <div style="position:absolute;width:560px;height:560px;right:-180px;top:-180px;border-radius:50%;background:var(--navy-500);opacity:.5"></div>
+    <div style="position:absolute;width:300px;height:300px;right:120px;bottom:-120px;border-radius:50%;background:var(--teal-300);opacity:.16"></div>
+    <div class="slide__dot" style="right:150px;top:470px;width:30px;height:30px"></div>
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">01</span>
+    </header>
+    <div class="slide__body">
+      <div style="display:grid;grid-template-columns:1.08fr .92fr;gap:48px;align-items:center;height:100%">
+        <div style="display:flex;flex-direction:column;justify-content:center">
+          <div class="slide__eyebrow" style="margin-bottom:22px">Lesson 3 — ADC &amp; Multithreading</div>
+          <h1 class="slide__title" style="font-size:50px;max-width:560px">Machine Learning with Raspberry Pi &amp; Smart Car</h1>
+          <p class="slide__lead" style="margin-top:24px;max-width:520px">Today the car reads its own sensors — and watches its battery in the background while it does.</p>
+        </div>
+        <div style="background:transparent;height:400px;display:flex;align-items:center;justify-content:center">
+          <img src="../../../assets/main/smart-car-full.png" alt="The Freenove 4WD smart car" style="max-width:100%;max-height:100%;object-fit:contain" />
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <a class="site" href="https://aicodeacademy.com" target="_blank" rel="noopener">aicodeacademy.com</a>
+    </footer>
+  </section>
+
+  <!-- 02 · Introduction -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">02</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">From driving to sensing</h1>
+        <p class="slide__desc">Last time the car moved. Today it starts to notice the world around it.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><span class="k">Last time:</span> drove the wheels, beeped the buzzer, and built <b>command strings</b> like <code class="inl">CMD_MOTOR#...</code>.</p></div>
+            <div class="row"><span class="dot"></span><p><span class="k">We kept the shape:</span> <code class="inl">setup() → work → destroy()</code>, with <code class="inl">import car_setup</code> first.</p></div>
+            <div class="row"><span class="dot"></span><p><span class="k">Today:</span> the car <b>reads its own sensors</b> and <b>watches its battery</b> in the background.</p></div>
+          </div>
+          <div style="background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);box-shadow:var(--shadow-md);height:300px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+            <img src="../../../assets/main/smart-car-side-full.png" alt="Smart car, side view" style="max-width:90%;max-height:86%;object-fit:contain" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 03 · Our goals -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">03</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Today's goal: two loops at once</h1>
+        <p class="slide__desc">One program that prints the light sensors while a battery watchdog runs alongside it.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:52px;align-items:center">
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--teal-300);border-radius:var(--radius-xl);padding:24px 36px;box-shadow:var(--shadow-md)">
+            <div style="display:flex;gap:18px;align-items:flex-start;padding:0 0 13px"><span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px">1</span><p style="margin:0;font-size:19px;color:var(--text-strong);font-weight:500;line-height:1.35">Keeps printing the <b>two light sensors</b> — left and right</p></div>
+            <div style="display:flex;gap:18px;align-items:flex-start;padding:13px 0;border-top:1px solid var(--border-subtle)"><span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--green-100);color:var(--green-700);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px">2</span><p style="margin:0;font-size:19px;color:var(--text-strong);font-weight:500;line-height:1.35">Runs a <b>battery watchdog</b> that beeps when power gets low</p></div>
+            <div style="display:flex;gap:18px;align-items:flex-start;padding:13px 0 0;border-top:1px solid var(--border-subtle)"><span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--amber-400);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px">★</span><p style="margin:0;font-size:19px;color:var(--text-strong);font-weight:500;line-height:1.35">Both loops run <b>at the same time</b> — that's multithreading</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">
+            <div style="display:flex;gap:14px;align-items:center;justify-content:center">
+              <img src="../../../assets/icons/full-battery.png" alt="" style="width:78px;height:78px;object-fit:contain" />
+              <img src="../../../assets/icons/low-battery.png" alt="" style="width:78px;height:78px;object-fit:contain" />
+            </div>
+            <p style="font-size:17px;color:var(--text-muted);margin:0;line-height:1.5">"At the same time" is the new idea — not just reading sensors.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 04 · What is an ADC? -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">04</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">What is an ADC?</h1>
+        <p class="slide__desc">It turns a smooth analog voltage into a number the computer can read.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:46px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Sensors like light and battery give a smooth <span class="k">analog voltage</span>.</p></div>
+            <div class="row"><span class="dot"></span><p>But computers only understand <span class="k">digital numbers</span>.</p></div>
+            <div class="row"><span class="dot"></span><p>The <span class="k">ADC</span> — Analog-to-Digital Converter — translates voltage into a number.</p></div>
+            <div class="row"><span class="dot"></span><p>We read it with <code class="inl">adc.recvADC(channel)</code>, which returns <b>volts</b>.</p></div>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:26px;box-shadow:var(--shadow-md)">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="flex:1;text-align:center;background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:18px 10px">
+                <div style="font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-weight:700;margin-bottom:6px">Analog in</div>
+                <div style="font-size:22px;font-weight:800;color:var(--navy-700)">2.5 V</div>
+                <div style="font-size:13px;color:var(--text-muted);line-height:1.35">a smooth voltage</div>
+              </div>
+              <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center">
+                <img src="../../../assets/icons/lightning-bold.png" alt="" style="width:46px;height:46px;object-fit:contain" />
+                <div style="font-size:12px;font-weight:800;color:var(--teal-600);margin-top:4px">ADC</div>
+              </div>
+              <div style="flex:1;text-align:center;background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:18px 10px">
+                <div style="font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);font-weight:700;margin-bottom:6px">Number out</div>
+                <div style="font-size:22px;font-weight:800;color:var(--navy-700)">2.5</div>
+                <div style="font-size:13px;color:var(--text-muted);line-height:1.35">your code can use</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;text-align:center;background:var(--navy-700);border-radius:var(--radius-md);padding:10px 12px">
+              <span style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300);font-weight:700">like a dimmer switch</span>
+              <div style="font-size:14px;color:#fff;margin-top:4px">smooth in → a number you can read</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 05 · The sensors we'll read -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">05</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">The sensors we'll read</h1>
+        <p class="slide__desc">The ADC has numbered inputs called <b>channels</b>. "Read a sensor" means "read its channel number."</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:46px;height:46px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:20px;font-weight:700">0</div>
+              <div style="font-size:20px;font-weight:800;color:var(--navy-700)">Left light</div>
+            </div>
+            <div style="font-size:15px;color:var(--text-muted);line-height:1.45">The left photoresistor — brighter light, different voltage.</div>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--teal-300);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:46px;height:46px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:20px;font-weight:700">1</div>
+              <div style="font-size:20px;font-weight:800;color:var(--navy-700)">Right light</div>
+            </div>
+            <div style="font-size:15px;color:var(--text-muted);line-height:1.45">The right photoresistor — the partner to channel 0.</div>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:46px;height:46px;border-radius:50%;background:var(--navy-700);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:20px;font-weight:700">2</div>
+              <div style="font-size:20px;font-weight:800;color:var(--navy-700)">Battery</div>
+            </div>
+            <div style="font-size:15px;color:var(--text-muted);line-height:1.45">The power pack — this reading <b>× 3</b> is the real voltage.</div>
+          </div>
+        </div>
+        <div style="margin-top:20px;display:flex;gap:13px;align-items:center;background:var(--neutral-50);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:14px 18px">
+          <img src="../../../assets/icons/light-sensor.png" alt="" style="width:30px;height:30px;flex-shrink:0;object-fit:contain" />
+          <p style="margin:0;font-size:16px;color:var(--text-body)">Find the <b>two small light sensors</b> on your board — they're the channel-0 and channel-1 inputs.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 06 · Battery math -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">06</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Battery math</h1>
+        <p class="slide__desc">The ADC only sees one third of the pack voltage — so we multiply the reading by 3.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.04fr .96fr;gap:46px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>The ADC sees <span class="k">one third</span> of the battery → multiply by <code class="inl">3</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>Healthy is about <span class="k">8 V</span>. Below that, we warn.</p></div>
+            <div class="row"><span class="dot"></span><p>Rough percent: map <code class="inl">7.0 V → 0%</code> and <code class="inl">8.4 V → 100%</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>Your phone estimates its battery the same way — voltage to percent.</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:14px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--green-400);border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--shadow-sm)">
+              <img src="../../../assets/icons/full-battery.png" alt="" style="width:40px;height:40px;flex-shrink:0;object-fit:contain" />
+              <div><div style="font-size:17px;font-weight:800;color:var(--navy-700)">≈ 8 V — healthy</div><div style="font-size:14px;color:var(--text-muted)">no warning</div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--shadow-sm)">
+              <img src="../../../assets/icons/low-battery.png" alt="" style="width:40px;height:40px;flex-shrink:0;object-fit:contain" />
+              <div><div style="font-size:17px;font-weight:800;color:var(--navy-700)">7.0 V or lower — low</div><div style="font-size:14px;color:var(--text-muted)">beep <b>twice</b></div></div>
+            </div>
+            <div style="display:flex;gap:14px;align-items:center;background:var(--surface-card);border:1px solid var(--border-subtle);border-left:4px solid var(--red-400);border-radius:var(--radius-lg);padding:14px 18px;box-shadow:var(--shadow-sm)">
+              <img src="../../../assets/icons/low-battery.png" alt="" style="width:40px;height:40px;flex-shrink:0;object-fit:contain" />
+              <div><div style="font-size:17px;font-weight:800;color:var(--navy-700)">6.8 V or lower — critical</div><div style="font-size:14px;color:var(--text-muted)">beep <b>four times</b> — charge now</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 07 · What is multithreading? -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">07</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">What is multithreading?</h1>
+        <p class="slide__desc">A thread is a separate line of work that runs at the same time as the rest.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.92fr 1.08fr;gap:46px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Today the <span class="k">main thread</span> prints the light readings.</p></div>
+            <div class="row"><span class="dot"></span><p>A <span class="k">second thread</span> watches the battery in the background.</p></div>
+            <div class="row"><span class="dot"></span><p>Both happen at once — <b>neither waits</b> for the other.</p></div>
+            <div class="row"><span class="dot"></span><p>Like cooking dinner while a timer quietly watches the oven.</p></div>
+          </div>
+          <!-- two-threads-side-by-side diagram -->
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);padding:24px 26px;box-shadow:var(--shadow-md)">
+            <div style="display:flex;gap:16px">
+              <div style="flex:1;background:var(--navy-700);border-radius:var(--radius-lg);padding:16px 14px;color:#fff">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--teal-300);margin-bottom:10px">Main thread</div>
+                <div style="font-family:var(--font-mono);font-size:13px;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;margin-bottom:7px">print light</div>
+                <div style="font-family:var(--font-mono);font-size:13px;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px;margin-bottom:7px">print light</div>
+                <div style="font-family:var(--font-mono);font-size:13px;background:rgba(255,255,255,.08);border-radius:6px;padding:6px 8px">print light</div>
+              </div>
+              <div style="flex:1;background:var(--teal-700);border-radius:var(--radius-lg);padding:16px 14px;color:#fff">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--amber-300);margin-bottom:10px">Battery thread</div>
+                <div style="font-family:var(--font-mono);font-size:13px;background:rgba(255,255,255,.12);border-radius:6px;padding:6px 8px;margin-bottom:7px">check battery</div>
+                <div style="font-family:var(--font-mono);font-size:13px;background:rgba(255,255,255,.12);border-radius:6px;padding:6px 8px">check battery</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;text-align:center;font-size:14px;color:var(--text-muted)"><b style="color:var(--navy-700)">↓ time →</b> &nbsp; both columns advance together</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 08 · Threads, daemons & a stop flag -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">08</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Daemons and a stop flag</h1>
+        <p class="slide__desc">Two small ideas keep our background thread tidy — and let us shut it down cleanly.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--navy-600);border-radius:var(--radius-lg);padding:24px 26px;box-shadow:var(--shadow-sm)">
+            <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--teal-600);margin-bottom:8px">Daemon thread</div>
+            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:10px">Quits with the program</div>
+            <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">A daemon thread is allowed to stop automatically when the main program ends, so it never holds the program open.</p>
+          </div>
+          <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-top:4px solid var(--amber-400);border-radius:var(--radius-lg);padding:24px 26px;box-shadow:var(--shadow-sm)">
+            <div style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--teal-600);margin-bottom:8px">Event</div>
+            <div style="font-size:22px;font-weight:800;color:var(--navy-700);margin-bottom:10px">A simple stop switch</div>
+            <p style="margin:0;font-size:16px;color:var(--text-body);line-height:1.5">An <code class="inl">Event</code> is an on/off flag. We flip it to tell the thread "time to stop" — a clean shutdown.</p>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:13px;align-items:center;background:var(--navy-600);border-radius:var(--radius-lg);padding:14px 20px;color:#fff">
+          <span style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--teal-300)">Why it matters</span>
+          <p style="margin:0;font-size:16px;color:var(--teal-100);line-height:1.45">A clean shutdown means we never leave a thread running or the ADC half-open.</p>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 09 · Imports (chunk 1) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">09</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 1</div>
+        <h1 class="slide__title">Start the file: imports</h1>
+        <p class="slide__desc"><code class="inl">car_setup</code> first, then the threading tools and the parts we read.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">import car_setup</code> first — it finds the car's modules.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">Thread</code> and <code class="inl">Event</code> come from Python's built-in <code class="inl">threading</code>.</p></div>
+            <div class="row"><span class="dot"></span><p>Then the <span class="k">ADC</span> (sensors) and the <span class="k">buzzer</span> (the low-battery beep).</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="st">"""Lesson 3: Multithreading and the ADC."""</span>
+
+<span class="kw">import</span> car_setup        <span class="co"># add the car's code folders</span>
+<span class="kw">import</span> time
+
+<span class="co"># a thread runs alongside the rest; an Event is a stop flag</span>
+<span class="kw">from</span> threading <span class="kw">import</span> Thread, Event
+
+<span class="kw">from</span> adc <span class="kw">import</span> Adc          <span class="co"># reads sensor voltages</span>
+<span class="kw">from</span> buzzer <span class="kw">import</span> Buzzer    <span class="co"># the low-battery beeper</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 10 · Settings: ADC channels (chunk 2) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">10</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 2</div>
+        <h1 class="slide__title">Settings: the ADC channels</h1>
+        <p class="slide__desc">Give the channel numbers friendly names so the code reads clearly.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Naming the channels beats scattering bare <code class="inl">0</code>, <code class="inl">1</code>, <code class="inl">2</code> through the code.</p></div>
+            <div class="row"><span class="dot"></span><p>Now <code class="inl">recvADC(BATTERY)</code> reads like a sentence.</p></div>
+            <div class="row"><span class="dot"></span><p>The comment reminds us of the battery <span class="k">× 3</span>.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="co"># ---- ADC channels ----</span>
+LEFT_LIGHT = <span class="kw">0</span>
+RIGHT_LIGHT = <span class="kw">1</span>
+BATTERY = <span class="kw">2</span>          <span class="co"># reading × 3 = real pack voltage</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 11 · Settings: battery thresholds (chunk 3) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">11</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 3</div>
+        <h1 class="slide__title">Settings: battery thresholds</h1>
+        <p class="slide__desc">Two warning levels, in volts — the numbers you'll tweak later.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">LOW_BATTERY</code> = the first warning — beep twice.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">CRITICAL_BATTERY</code> = time to charge — beep four times.</p></div>
+            <div class="row"><span class="dot"></span><p>Both are in <span class="k">volts</span>, after the × 3 scaling.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="co"># ---- battery settings (volts) ----</span>
+LOW_BATTERY = <span class="kw">7.0</span>        <span class="co"># beep twice as a warning</span>
+CRITICAL_BATTERY = <span class="kw">6.8</span>   <span class="co"># beep four times, time to charge</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 12 · Empty boxes + the stop flag (chunk 4) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">12</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 4</div>
+        <h1 class="slide__title">Empty boxes and the stop flag</h1>
+        <p class="slide__desc">Parts start as <code class="inl">None</code>; we also create the <code class="inl">stop_event</code> flag now.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.8fr 1.2fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Name the parts now (<code class="inl">None</code>), build them in <code class="inl">setup()</code>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">Event()</code> starts <b>not set</b>; calling <code class="inl">.set()</code> later means "stop."</p></div>
+            <div class="row"><span class="dot"></span><p>The flag exists <b>before</b> the thread that reads it — order matters.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="co"># ---- car parts (created in setup) ----</span>
+adc = <span class="kw">None</span>
+buzzer = <span class="kw">None</span>
+stop_event = <span class="fn">Event</span>()      <span class="co"># set() it to stop the thread</span>
+battery_thread = <span class="kw">None</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 13 · setup(): build & start the thread (chunk 5) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">13</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 5</div>
+        <h1 class="slide__title">setup(): build and start the thread</h1>
+        <p class="slide__desc">Three steps for a thread: make it, set it as a daemon, then start it.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Create the sensors, then <span class="k">make and start</span> the background thread.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">target=monitor_battery</code> = "run that function in the thread."</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">daemon = True</code> = quit with the program. <code class="inl">.start()</code> launches it.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="kw">def</span> <span class="fn">setup</span>():
+    <span class="st">"""Create sensors and start the battery thread."""</span>
+    <span class="kw">global</span> adc, buzzer, battery_thread
+    adc = <span class="fn">Adc</span>()
+    buzzer = <span class="fn">Buzzer</span>()
+
+    battery_thread = <span class="fn">Thread</span>(target=monitor_battery)
+    battery_thread.daemon = <span class="kw">True</span>   <span class="co"># stop with the program</span>
+    battery_thread.<span class="fn">start</span>()         <span class="co"># begin running now</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 14 · Reading & scaling the battery (chunk 6) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">14</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 6</div>
+        <h1 class="slide__title">Read and scale the battery</h1>
+        <p class="slide__desc">Read channel 2, multiply by 3, then turn the voltage into a rough percent.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">recvADC(BATTERY)</code> gives volts; <code class="inl">× 3</code> is the real pack voltage.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">int(...)</code> drops the decimals to a whole percent.</p></div>
+            <div class="row"><span class="dot"></span><p>Maps <code class="inl">7.0 V → 0%</code> and <code class="inl">8.4 V → 100%</code>.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre sm"><span class="kw">def</span> <span class="fn">read_battery_voltage</span>():
+    <span class="st">"""Scale the ADC reading to the real pack voltage."""</span>
+    <span class="kw">return</span> adc.<span class="fn">recvADC</span>(BATTERY) * <span class="kw">3</span>   <span class="co"># ADC sees 1/3</span>
+
+
+<span class="kw">def</span> <span class="fn">battery_percent</span>(voltage):
+    <span class="st">"""Turn a voltage into a rough 0–100% estimate."""</span>
+    <span class="kw">return</span> <span class="fn">int</span>((voltage - <span class="kw">7</span>) / <span class="kw">1.40</span> * <span class="kw">100</span>)   <span class="co"># 7.0=0% 8.4=100%</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 15 · beep(): a reusable helper (chunk 7) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">15</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 7</div>
+        <h1 class="slide__title">beep(): a reusable helper</h1>
+        <p class="slide__desc">Beep on and off a chosen number of times — reusing the buzzer strings from Lesson 2.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.84fr 1.16fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">buzzer.run("1")</code> turns it on, <code class="inl">"0"</code> turns it off — same as Lesson 2.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">_</code> is a throwaway name — we just want to <b>repeat</b>.</p></div>
+            <div class="row"><span class="dot"></span><p>Pass <code class="inl">2</code> for low, <code class="inl">4</code> for critical.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="kw">def</span> <span class="fn">beep</span>(times):
+    <span class="st">"""Beep on and off a chosen number of times."""</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(times):   <span class="co"># "_" = a name we don't use</span>
+        buzzer.<span class="fn">run</span>(<span class="st">"1"</span>)      <span class="co"># on</span>
+        time.<span class="fn">sleep</span>(<span class="kw">0.1</span>)
+        buzzer.<span class="fn">run</span>(<span class="st">"0"</span>)      <span class="co"># off</span>
+        time.<span class="fn">sleep</span>(<span class="kw">0.1</span>)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 16 · monitor_battery(): the background loop (chunk 8) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">16</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 8</div>
+        <h1 class="slide__title">monitor_battery(): the background loop</h1>
+        <p class="slide__desc">This is the function the second thread runs — it loops until told to stop.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.78fr 1.22fr;gap:40px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">while not stop_event.is_set()</code> = loop until told to quit.</p></div>
+            <div class="row"><span class="dot"></span><p>Beeps <b>more</b> the lower it gets: critical → 4, low → 2.</p></div>
+            <div class="row"><span class="dot"></span><p>Waits <code class="inl">3</code> seconds between checks.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre sm"><span class="kw">def</span> <span class="fn">monitor_battery</span>():
+    <span class="st">"""Runs in the background thread."""</span>
+    <span class="kw">while not</span> stop_event.<span class="fn">is_set</span>():        <span class="co"># loop until stopped</span>
+        voltage = <span class="fn">read_battery_voltage</span>()
+        <span class="fn">print</span>(<span class="st">"Battery:"</span>, <span class="fn">round</span>(voltage, <span class="kw">2</span>), <span class="st">"V"</span>)
+        <span class="kw">if</span> voltage &lt;= CRITICAL_BATTERY:
+            <span class="fn">beep</span>(<span class="kw">4</span>)
+        <span class="kw">elif</span> voltage &lt;= LOW_BATTERY:
+            <span class="fn">beep</span>(<span class="kw">2</span>)
+        time.<span class="fn">sleep</span>(<span class="kw">3</span>)                     <span class="co"># check again in 3 s</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 17 · loop(): the main thread (chunk 9) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">17</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 9</div>
+        <h1 class="slide__title">loop(): the main thread</h1>
+        <p class="slide__desc">While the battery thread runs quietly, the main thread keeps printing the light sensors.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.82fr 1.18fr;gap:42px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p>Reads <span class="k">both</span> light channels every second.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">round(value, 2)</code> keeps the printout readable.</p></div>
+            <div class="row"><span class="dot"></span><p>Now there are <b>two</b> <code class="inl">while</code> loops alive at once — multithreading in action.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre sm"><span class="kw">def</span> <span class="fn">loop</span>():
+    <span class="st">"""The MAIN thread: print the two light readings."""</span>
+    <span class="kw">while True</span>:
+        left = adc.<span class="fn">recvADC</span>(LEFT_LIGHT)
+        right = adc.<span class="fn">recvADC</span>(RIGHT_LIGHT)
+        <span class="fn">print</span>(<span class="st">"Light  left:"</span>, <span class="fn">round</span>(left, <span class="kw">2</span>),
+              <span class="st">"  right:"</span>, <span class="fn">round</span>(right, <span class="kw">2</span>))
+        time.<span class="fn">sleep</span>(<span class="kw">1</span>)</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 18 · destroy() (chunk 10) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">18</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 10</div>
+        <h1 class="slide__title">Clean up: destroy()</h1>
+        <p class="slide__desc">Flip the stop flag, wait for the thread to finish, then close the ADC.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.82fr 1.18fr;gap:42px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">stop_event.set()</code> tells <code class="inl">monitor_battery()</code> to finish.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">join(timeout=2)</code> = wait up to 2 s so we never hang forever.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">i2cClose()</code> closes the connection to the ADC chip.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre sm"><span class="kw">def</span> <span class="fn">destroy</span>():
+    <span class="st">"""Stop the thread and close the sensors cleanly."""</span>
+    stop_event.<span class="fn">set</span>()             <span class="co"># tell the thread to finish</span>
+    <span class="kw">if</span> battery_thread <span class="kw">is not None</span>:
+        battery_thread.<span class="fn">join</span>(timeout=<span class="kw">2</span>)   <span class="co"># wait (max 2 s)</span>
+    <span class="kw">if</span> buzzer <span class="kw">is not None</span>:
+        buzzer.<span class="fn">run</span>(<span class="st">"0"</span>)          <span class="co"># make sure it's off</span>
+    <span class="kw">if</span> adc <span class="kw">is not None</span>:
+        adc.<span class="fn">i2cClose</span>()           <span class="co"># close the ADC connection</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 19 · The main block (chunk 11) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">19</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading · the file, chunk 11</div>
+        <h1 class="slide__title">The main block</h1>
+        <p class="slide__desc">The same trusty pattern: <code class="inl">try</code> runs the work, <code class="inl">finally</code> always cleans up.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.92fr 1.08fr;gap:44px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><code class="inl">try</code> runs <code class="inl">setup()</code> then <code class="inl">loop()</code>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">except KeyboardInterrupt</code> catches <b>Ctrl+C</b>.</p></div>
+            <div class="row"><span class="dot"></span><p><code class="inl">finally</code> guarantees <code class="inl">destroy()</code> runs no matter what.</p></div>
+            <div class="row"><span class="dot"></span><p>Third lesson in a row with this block — you should recognise it instantly.</p></div>
+          </div>
+          <div class="cwrap">
+            <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">lesson_3_adc_multithreading.py</span></div>
+<pre class="cpre"><span class="kw">if</span> __name__ == <span class="st">"__main__"</span>:
+    <span class="kw">try</span>:
+        <span class="fn">setup</span>()
+        <span class="fn">loop</span>()
+    <span class="kw">except</span> KeyboardInterrupt:
+        <span class="kw">pass</span>
+    <span class="kw">finally</span>:
+        <span class="fn">destroy</span>()</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 20 · We built the whole file (chunk 12) -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">20</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">You built the whole file 🎉</h1>
+        <p class="slide__desc">One program, two threads running together.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:48px;align-items:center">
+          <div style="display:flex;flex-wrap:wrap;gap:9px;align-items:center">
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">imports</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">channels + thresholds</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">stop_event</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">setup()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">battery helpers</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">beep()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--teal-pill);color:var(--teal-pill-text);font-family:var(--font-mono);font-size:14px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill)">monitor_battery()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--teal-pill);color:var(--teal-pill-text);font-family:var(--font-mono);font-size:14px;font-weight:700;padding:7px 13px;border-radius:var(--radius-pill)">loop()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">destroy()</span><span style="color:var(--teal-600);font-weight:800">→</span>
+            <span style="background:var(--neutral-100);color:var(--navy-700);font-family:var(--font-mono);font-size:14px;font-weight:600;padding:7px 13px;border-radius:var(--radius-pill)">main block</span>
+            <p style="width:100%;margin:14px 0 0;font-size:17px;color:var(--text-muted);line-height:1.5">The two <span style="color:var(--teal-pill-label);font-weight:700">teal</span> pieces are the functions that loop — they run <b>at the same time</b>.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center">
+            <img src="../../../assets/icons/success.png" alt="" style="width:120px;height:120px;object-fit:contain" />
+            <p style="font-size:17px;color:var(--text-strong);font-weight:600;margin:0">Reads sensors and watches the battery, both at once.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 21 · Run it -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">21</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Run it</h1>
+        <p class="slide__desc">Run it from the Pi's terminal — the output interleaves the two threads.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:.92fr 1.08fr;gap:40px;align-items:center">
+          <div>
+            <div class="row" style="padding-top:0;border-top:0"><span class="dot"></span><p>Light prints every <code class="inl">1 s</code>, battery every <code class="inl">3 s</code> — they <b>mix</b>.</p></div>
+            <div class="row"><span class="dot"></span><p>The mixed output is the proof: <b>both threads run at once</b>.</p></div>
+            <div class="row"><span class="dot"></span><p>Press <code class="inl">Ctrl+C</code> to stop. Use <code class="inl">sudo</code> for the run command.</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="cwrap">
+              <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">Pi terminal</span></div>
+<pre class="cpre sm">cd smartcar2026/Code/User
+sudo python3 lesson_3_adc_multithreading.py</pre>
+            </div>
+            <div class="cwrap">
+              <div class="cbar"><i style="background:var(--red-400)"></i><i style="background:var(--amber-400)"></i><i style="background:var(--teal-300)"></i><span class="cfile">output</span></div>
+<pre class="cpre sm">Light  left: 1.85 V   right: 1.90 V
+<span class="st">Battery: 8.05 V ( 75 % )</span>
+Light  left: 1.84 V   right: 1.88 V
+Light  left: 1.86 V   right: 1.91 V
+<span class="st">Battery: 8.04 V ( 74 % )</span></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 22 · Try it yourself -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">22</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Try it yourself</h1>
+        <p class="slide__desc">Poke at the sensors and the settings, then watch the numbers change.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center">
+          <div>
+            <div class="row"><span class="dot"></span><p><b>Cover one light sensor</b> with your hand and watch its voltage change.</p></div>
+            <div class="row"><span class="dot"></span><p>Raise <code class="inl">LOW_BATTERY</code> to <code class="inl">7.8</code> to force a warning beep — then set it back.</p></div>
+            <div class="row"><span class="dot"></span><p>Change the battery check interval from <code class="inl">3</code> seconds to <code class="inl">5</code>.</p></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:28px 30px;color:#fff;box-shadow:var(--shadow-lg)">
+            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300);margin-bottom:8px">Challenge</div>
+            <div style="font-size:21px;font-weight:800;color:#fff;margin-bottom:10px">Which side is brighter?</div>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.55">Print <code class="inl" style="background:rgba(255,255,255,.12);color:#fff">"LEFT brighter"</code> or <code class="inl" style="background:rgba(255,255,255,.12);color:#fff">"RIGHT brighter"</code> based on which sensor reads higher — a preview of light-seeking.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 23 · Troubleshooting -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">23</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">Common issues</h1>
+        <p class="slide__desc">If something's off, it's almost always one of these.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.25fr .75fr;gap:46px;align-items:center">
+          <div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:0 0 12px"><img src="../../../assets/icons/warning.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Weird battery voltage</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">Remember the <b>× 3</b>, and check the ADC wiring.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/warning.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Won't quit on Ctrl+C</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">That's the <code class="inl">join(timeout=2)</code> wait — give it a second.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/error.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">i2c / OSError</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">I²C not enabled, or the ADC address / wiring is off.</div></div></div>
+            <div style="display:flex;gap:15px;align-items:flex-start;padding:12px 0 0;border-top:1px solid var(--border-subtle)"><img src="../../../assets/icons/error.png" alt="" style="width:32px;height:32px;flex-shrink:0" /><div><div style="font-size:18px;font-weight:700;color:var(--text-strong)">Light values don't change</div><div style="font-size:15px;color:var(--text-muted);line-height:1.45">Sensor covered already, or wired to the wrong channel.</div></div></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:32px 30px;color:#fff;box-shadow:var(--shadow-lg)">
+            <img src="../../../assets/icons/warning-light.png" alt="" style="width:54px;height:54px;object-fit:contain;margin-bottom:16px" />
+            <div style="font-size:24px;font-weight:800;color:#fff;margin-bottom:10px">Check I²C</div>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.55">Most ADC errors come from I²C being disabled. Enable it in <code class="inl" style="background:rgba(255,255,255,.12);color:#fff">raspi-config</code> and reseat the ADC.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 24 · Recap & what's next -->
+  <section class="slide frame">
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">24</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <div class="slide__eyebrow">Lesson 3 — ADC &amp; Multithreading</div>
+        <h1 class="slide__title">The car can sense and multitask!</h1>
+        <p class="slide__desc">You read analog sensors and ran a background thread you can stop cleanly.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.2fr .8fr;gap:52px;align-items:stretch">
+          <div style="display:flex;flex-direction:column;justify-content:center">
+            <div style="display:flex;gap:14px;align-items:center;padding:0 0 13px;font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>Read analog sensors through the ADC — light and battery</div>
+            <div style="display:flex;gap:14px;align-items:center;padding:13px 0;border-top:1px solid var(--border-subtle);font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>Ran a background thread and stopped it with an <code class="inl">Event</code></div>
+            <div style="display:flex;gap:14px;align-items:center;padding:13px 0 0;border-top:1px solid var(--border-subtle);font-size:19px;color:var(--text-strong);font-weight:500"><span style="width:30px;height:30px;border-radius:50%;background:var(--status-success-bg);color:var(--status-success);display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">✓</span>Touched every core part: lights, sound, motors, commands, sensors</div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:32px;color:#fff;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;justify-content:center">
+            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300)">Up next</div>
+            <h3 style="font-size:28px;font-weight:800;color:#fff;margin:10px 0 10px">Lesson 4<br/>Autonomous modes</h3>
+            <p style="font-size:16px;color:var(--teal-100);margin:0;line-height:1.5">Put the building blocks together into smarter, more autonomous behavior.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+  <!-- 25 · End-of-class checklist (HIDDEN — coach) -->
+  <section class="slide frame">
+    <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:var(--amber-400)"></div>
+    <header class="slide__header">
+      <div class="slide__brand"><img src="../../../assets/main/company-logo.png" alt="" /><span class="co">AI Code Academy</span></div>
+      <span class="slide__num">25</span>
+    </header>
+    <div class="slide__body">
+      <div class="slide__head">
+        <span style="display:inline-flex;align-items:center;gap:8px;background:var(--amber-100);color:var(--amber-800);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:5px 12px;border-radius:var(--radius-pill)">● Coach only · hidden slide</span>
+        <h1 class="slide__title" style="margin-top:12px">End-of-class checklist</h1>
+        <p class="slide__desc">Don't present this slide. Run through it right after class.</p>
+      </div>
+      <div class="slide__content">
+        <div style="display:grid;grid-template-columns:1.35fr .65fr;gap:44px;align-items:start">
+          <div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:0 0 16px"><span class="pnum">1</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Post the after-class recap</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Summarise what you covered on the class page so students can catch up.</p></div></div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:16px 0;border-top:1px solid var(--border-subtle)"><span class="pnum">2</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Log absent students</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Post anyone who missed class in the <span style="color:var(--navy-600);font-weight:700;font-family:var(--font-mono);font-size:13.5px">#attendance</span> Discord channel.</p></div></div>
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:16px 0 0;border-top:1px solid var(--border-subtle)"><span class="pnum">3</span><div><h3 style="font-size:19px;font-weight:700;color:var(--text-strong);margin:0 0 3px">Prep the Pis for next class</h3><p style="font-size:15px;color:var(--text-muted);margin:0;line-height:1.45">Confirm <b>I²C is enabled</b> on each Pi and charge the cars before Lesson 4.</p></div></div>
+          </div>
+          <div style="background:var(--navy-600);border-radius:var(--radius-xl);padding:26px;color:#fff;box-shadow:var(--shadow-md)">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-300);margin-bottom:14px">Every class</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0">✓ Post a class announcement</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0;border-top:1px solid rgba(255,255,255,.15)">✓ Introductions if needed</div>
+            <div style="font-size:14.5px;color:#fff;font-weight:600;line-height:1.4;padding:8px 0;border-top:1px solid rgba(255,255,255,.15)">✓ Note absences in #attendance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide__footer">
+      <span class="course">Machine Learning with Raspberry Pi &amp; Smart Car — Level 3</span>
+      <span class="lesson">Lesson 3</span>
+    </footer>
+  </section>
+
+</div>
+</body>
+</html>

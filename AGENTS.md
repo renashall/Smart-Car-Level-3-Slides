@@ -1,107 +1,36 @@
-# Claude Guide - Smart-Car-Level-3-Slides
+# Agent Guide - Smart-Car-Level-3-Slides
 
-This repository is for designing slide decks for the Smart Car course.
-It is a companion to the `smartcar2026` code repository.
+## Repository Purpose
 
-## Primary Role
+This repository contains Smart Car course lesson plans and rendered slide decks. It is the slide companion to the `smartcar2026` code repository.
 
-- Design polished slide decks from source content, usually found in `content/`
-  as plain text, markdown, outlines, notes, or similar files.
-- Use `Design System/assets/` for reusable visual material: icons, product
-  images, board images, screenshots, course visuals, and fonts.
-- Keep slide work self-contained in this repository. Do not edit files outside
-  `Smart-Car-Level-3-Slides/`.
+Keep slide work self-contained here. The companion repository may be read for code examples and source verification, but do not write, rename, delete, or format files outside this repository unless the user explicitly asks for that separate work.
 
-## Repository Boundary
+When reading the companion repository, use `../Code/` if it is nested here or `../smartcar2026/Code/` if it is checked out alongside this repository. Verify referenced code paths and filenames before using them in a deck.
 
-- This repo may be nested inside `smartcar2026` or checked out next to it.
-- If nested, use `..` or `../Code/` for scripted reads. If checked out next to
-  `smartcar2026`, use `../smartcar2026/` and its `Code/` folder.
-- You may read the companion repo's files for context, especially its `Code/`
-  folder, which contains the course and smart car code referenced by the slides.
-- Never write, rename, delete, format, or otherwise modify files outside this
-  repo unless the user explicitly asks for that separate code-repo work.
-- If you need code examples for slides, read them from the nearby
-  `smartcar2026` repo's `Code/` folder and adapt concise excerpts into slide
-  content.
+## Start Here And Follow The Lesson Workflow
 
-## Layout
+- At the start of any change, read `design-system/DESIGN.md`, then follow the linked guide that matches the work. Treat those guides as the source of truth for detailed design, content, asset, layout, and export rules.
+- Work through the lesson sequence: ingest source content, plan and outline the slides, render the deck, then export the requested deliverables.
+- Keep lesson plans in `design-system/content/slide-plans/` and rendered decks in `design-system/content/slide-decks/`.
+- Use the canonical skills in `design-system/skills/` (also linked from `.agents/skills/` and `.claude/skills/`): `slide-lesson-planner` for planning, `edit-lesson` for revising a lesson plan and its matching deck, `slide-deck-design` for rendering or designing slides, `export-deck-pdf` for PDF export, and `export-deck-pptx-screenshot` for PowerPoint export.
 
-- `content/` - source material for slide decks, typically plain text or notes.
-- `Design System/` - AI Code Academy design system for deck visuals, tokens,
-  components, slide examples, assets, and the static lesson-deck template.
-- `.claude/skills/` - local Claude workflows for this slide-design repo.
+When the user supplies Markdown lesson content, place it in the appropriate `design-system/content/` location and incorporate it into the lesson plan and deck. Place uploaded images in the appropriate category under `design-system/assets/`, document them in the relevant asset guide or catalog, and incorporate relevant images into the affected lesson plan and deck.
 
-## Design System
+## Deliverables
 
-- Use `Design System/` as the default visual framework for new or revised slide
-  decks. Read `Design System/SKILL.md` and `Design System/readme.md` before
-  designing rendered slides.
-- Build real decks from `Design System/templates/lesson-deck/` when possible;
-  use `Design System/slides/` as slide-type examples, not as one-off styling to
-  copy by eye.
-- Link `Design System/styles.css` or reuse its token files for colors,
-  typography, spacing, radius, shadows, and base slide styling. Keep decks on
-  the 1280x720, 16:9 canvas defined by the system.
-- Follow the AI Code Academy brand: Rubik for display/body text, JetBrains Mono
-  for code, navy `#224289`, teal `#61cbc8`, amber `#fcb600`, soft navy-tinted
-  shadows, rounded cards, flat fills, and sentence-case instructional copy.
-- Prefer design-system components and patterns for core UI, callouts, code
-  blocks, lists, material cards, screenshots, recap slides, thanks slides, and
-  coach-only slides. Reuse `Design System/assets/` images before making new
-  visuals.
-- Preserve the design-system export rules for PPTX: keep text as real text,
-  avoid export-hostile CSS such as heavy filters/backdrop blur/clip paths, pass
-  Rubik and JetBrains Mono to exporters, and put full URLs in hidden
-  speaker/link notes when a slide shows a link.
+- Keep every deck on the design system's 1280x720, 16:9 canvas.
+- Save each deck's HTML, PDF, PPTX, and related images together in `design-system/content/slide-decks/lesson-<n>-<name>/`, using `lesson-<n>.<ext>` names such as `lesson-10.html`, `lesson-10.pdf`, and `lesson-10.pptx`.
+- Use the PDF workflow for one slide per page with selectable text and clickable links.
+- Use the screenshot PPTX workflow when requested; it preserves speaker notes and clickable link hotspots.
+- Read `design-system/docs/EXPORT.md` for the authoritative export behavior, then render and inspect the deck and remove temporary capture files.
 
-## Skills
+## Assets And Security
 
-Local Claude skills live in `.claude/skills/` and are mirrored under
-`Design System/skills/` so they travel with the design system. Use them when the
-matching task comes up:
+- Reuse assets from `design-system/assets/` where suitable. Keep new non-font asset names in kebab-case and do not rename or restyle supplied font files.
+- Do not store secrets, API keys, credentials, private tokens, or similar sensitive data in this repository. Keep temporary work in the local ignored temp directory and remove it after use.
 
-- **`slide-deck-design`** — design or revise a rendered lesson deck from a
-  `content/slide-plans/*.md` plan using the Design System. Reach for it whenever
-  building or editing decks.
-- **`export-deck-pdf`** — export a rendered `.html` deck to a clean 16:9 PDF (one
-  slide per page, selectable text, clickable links). Use whenever the user asks
-  for a PDF of a deck. Run
-  `python .claude/skills/export-deck-pdf/export_pdf.py <deck.html>`.
-- **`export-deck-pptx-screenshot`** — export a rendered `.html` deck to a 16:9
-  `.pptx` of slide screenshots, with speaker notes and clickable link hotspots.
-  Use whenever the user asks for a PowerPoint/`.pptx` of a deck. Run
-  `python .claude/skills/export-deck-pptx-screenshot/build_pptx.py <deck.html>`.
+## Git And Repository Boundary
 
-Save every deck deliverable (`.html`, `.pdf`, `.pptx`, images) together in
-`content/slide-decks/lesson-<n>-<name>/`, named `lesson-<n>.<ext>` (e.g.
-`lesson-10.html`, `lesson-10.pdf`, `lesson-10.pptx`).
-
-After you make any update to slide deck deliverables in this repo, commit and
-sync the repo once the deck has been verified and temporary files have been
-cleaned up.
-
-## Asset Rules
-
-- Prefer assets already in `Design System/assets/` before creating new visuals.
-- Keep non-font asset names in kebab-case, such as `my-file-name.png`.
-- Keep image assets as `.png` files with transparent backgrounds where useful.
-- Do not rename or restyle the Rubik font files under
-  `Design System/assets/fonts/Rubik/`.
-
-## Slide Design Expectations
-
-- Turn raw content into clear instructional decks, not text dumps.
-- Structure lessons with a strong learning arc: context, objective, concept,
-  demonstration, practice, troubleshooting, and recap when appropriate.
-- Use visuals from `Design System/assets/` to make hardware, setup steps, and
-  code workflows concrete.
-- Keep code on slides short and readable. Prefer focused excerpts over full
-  files.
-- When a deck references repository code, verify the code path and filename
-  against the nearby `smartcar2026` repo's `Code/` folder before finalizing.
-
-## Safety
-
-- Do not store secrets, API keys, credentials, or private tokens in this repo.
-- Keep temporary files in a local ignored temp folder and remove them when done.
+- Do not stage, commit, add remotes, push, or publish without explicit authorization. When a commit is authorized, use `development` when available, otherwise `main`; update `main` only through the repository's Push To Main task or script after committed development work is ready.
+- Preserve unrelated work in the working tree and make only the requested scoped changes.
